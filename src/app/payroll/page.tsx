@@ -7,7 +7,7 @@ import {
   Users, UserPlus, UserCheck, UserX, Settings, Bell, Search, Filter,
   Building2, Key, Wrench, CreditCard, AlertTriangle, CheckCircle,
   FileText, Calculator, Receipt, Clock, Edit3, Trash2, Eye,
-  MapPin, Phone, Mail, Briefcase, Award, Target, ChefHat, Utensils, Home
+  MapPin, Phone, Mail, Briefcase, Award, Target, ChefHat, Utensils, Home, Menu
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
@@ -15,15 +15,15 @@ import {
   ComposedChart
 } from 'recharts';
 
-// Restaurant CFO Brand Colors (Updated to Blue Theme - Consistent with other pages)
+// Restaurant CFO Brand Colors
 const BRAND_COLORS = {
-  primary: '#56B6E9',      // Blue primary (from dashboard)
-  secondary: '#3A9BD1',    // Darker blue
-  tertiary: '#7CC4ED',     // Lighter blue
-  accent: '#2E86C1',       // Deep blue accent
-  success: '#27AE60',      // Keep green for success
-  warning: '#F39C12',      // Keep orange for warning
-  danger: '#E74C3C',       // Keep red for danger
+  primary: '#56B6E9',
+  secondary: '#3A9BD1',
+  tertiary: '#7CC4ED',
+  accent: '#2E86C1',
+  success: '#27AE60',
+  warning: '#F39C12',
+  danger: '#E74C3C',
   gray: {
     50: '#F8FAFC',
     100: '#F1F5F9',
@@ -126,15 +126,14 @@ interface NewEmployeeForm {
   certifications: string[];
 }
 
-
 // Restaurant CFO Logo Component
-const IAMCFOLogo = ({ className = "w-12 h-12" }: { className?: string }) => (
+const IAMCFOLogo = ({ className = "w-8 h-8 sm:w-12 sm:h-12" }: { className?: string }) => (
   <div className={`${className} flex items-center justify-center relative`}>
     <img 
       src="/favicon.png" 
       alt="IAM CFO Logo" 
       className="w-full h-full object-contain rounded"
-      style={{ minWidth: '48px', minHeight: '48px' }}
+      style={{ minWidth: '32px', minHeight: '32px' }}
     />
   </div>
 );
@@ -147,9 +146,9 @@ export default function RestaurantPayrollPage() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('monthly');
   const [departmentFilter, setDepartmentFilter] = useState('All Departments');
   const [locationFilter, setLocationFilter] = useState('All Locations');
-  const [departmentDropdownOpen, setDepartmentDropdownOpen] = useState(false);
-  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   
   const [newEmployeeForm, setNewEmployeeForm] = useState<NewEmployeeForm>({
     firstName: '',
@@ -477,12 +476,26 @@ export default function RestaurantPayrollPage() {
 
   // Utility functions
   const formatCurrency = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}k`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatNumber = (value: number): string => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}k`;
+    }
+    return value.toLocaleString();
   };
 
   const formatDate = (dateString: string): string => {
@@ -678,23 +691,23 @@ export default function RestaurantPayrollPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Notification */}
       {notification.show && (
-        <div className={`fixed top-5 right-5 z-50 px-6 py-4 rounded-lg text-white font-medium shadow-lg transition-transform ${
+        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 sm:top-5 sm:right-5 sm:left-auto sm:transform-none z-50 px-4 sm:px-6 py-3 sm:py-4 rounded-lg text-white font-medium shadow-lg transition-all max-w-xs sm:max-w-none text-sm sm:text-base ${
           notification.type === 'success' ? 'bg-green-500' :
           notification.type === 'error' ? 'bg-red-500' :
           notification.type === 'warning' ? 'bg-yellow-500' :
           'bg-blue-500'
-        } ${notification.show ? 'translate-x-0' : 'translate-x-full'}`}>
+        }`}>
           {notification.message}
         </div>
       )}
 
-      {/* New Employee Modal */}
+      {/* New Employee Modal - Mobile Optimized */}
       {newEmployeeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Add New Restaurant Staff Member</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Add New Staff Member</h2>
                 <button
                   onClick={() => setNewEmployeeModalOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -704,10 +717,10 @@ export default function RestaurantPayrollPage() {
               </div>
             </div>
             
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
                     <input
@@ -728,7 +741,7 @@ export default function RestaurantPayrollPage() {
                       placeholder="Enter last name"
                     />
                   </div>
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                     <input
                       type="email"
@@ -752,8 +765,8 @@ export default function RestaurantPayrollPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Job Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Job Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
                     <select
@@ -806,8 +819,8 @@ export default function RestaurantPayrollPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Employment & Pay</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Employment & Pay</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Employment Type</label>
                     <select
@@ -859,7 +872,7 @@ export default function RestaurantPayrollPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+            <div className="p-4 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={() => setNewEmployeeModalOpen(false)}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -878,192 +891,289 @@ export default function RestaurantPayrollPage() {
         </div>
       )}
 
-      {/* Page Header with IAM CFO Branding */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center">
-            <IAMCFOLogo className="w-12 h-12 mr-4" />
-            <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold text-gray-900">I AM CFO</h1>
-                <span className="text-sm px-3 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
-                  Payroll Management
-                </span>
+      {/* Page Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <IAMCFOLogo className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4" />
+              <div>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">I AM CFO</h1>
+                  <span className="text-xs sm:text-sm px-2 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
+                    <span className="hidden sm:inline">Payroll Management</span>
+                    <span className="sm:hidden">Payroll</span>
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">Complete restaurant payroll • Tip reporting • Tax compliance • Employee management</p>
               </div>
-              <p className="text-sm text-gray-600 mt-1">Complete restaurant payroll • Tip reporting • Tax compliance • Employee management</p>
             </div>
-          </div>
-        </div>
-      </div>
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2 rounded-lg border border-gray-300 bg-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Header Controls */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <h2 className="text-3xl font-bold" style={{ color: BRAND_COLORS.primary }}>Restaurant Payroll Management</h2>
-            <div className="flex flex-wrap gap-4 items-center">
-              {/* Tab Selector */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'overview'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'overview' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Overview
-                </button>
-                <button
-                  onClick={() => setActiveTab('employees')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'employees'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'employees' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Staff
-                </button>
-                <button
-                  onClick={() => setActiveTab('payroll-runs')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'payroll-runs'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'payroll-runs' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Payroll Runs
-                </button>
-                <button
-                  onClick={() => setActiveTab('tax-center')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'tax-center'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'tax-center' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Tax Center
-                </button>
-              </div>
-
-              {/* Action Buttons */}
+            {/* Desktop Action Buttons */}
+            <div className="hidden sm:flex gap-2">
               <button
                 onClick={() => setNewEmployeeModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                 style={{ backgroundColor: BRAND_COLORS.primary }}
               >
                 <UserPlus className="w-4 h-4" />
-                Add Staff Member
+                <span className="hidden lg:inline">Add Staff</span>
               </button>
-
               <button
-                onClick={() => showNotification('Restaurant payroll exported successfully', 'success')}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
+                onClick={() => showNotification('Payroll exported successfully', 'success')}
+                className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                 style={{ backgroundColor: BRAND_COLORS.success }}
               >
                 <Download className="w-4 h-4" />
-                Export
+                <span className="hidden lg:inline">Export</span>
               </button>
+            </div>
+          </div>
 
-              <button
-                onClick={() => showNotification('Restaurant payroll data refreshed', 'info')}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden" onClick={() => setMobileMenuOpen(false)}>
+              <div className="fixed top-0 right-0 w-80 max-w-full h-full bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Payroll Menu</h3>
+                    <button onClick={() => setMobileMenuOpen(false)}>
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Tab Navigation */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
+                      <div className="space-y-2">
+                        {[
+                          { key: 'overview', label: 'Overview', icon: '📊' },
+                          { key: 'employees', label: 'Staff', icon: '👥' },
+                          { key: 'payroll-runs', label: 'Payroll Runs', icon: '💰' },
+                          { key: 'tax-center', label: 'Tax Center', icon: '📋' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => {
+                              setActiveTab(tab.key as any);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center p-3 rounded-lg text-left transition-colors ${
+                              activeTab === tab.key
+                                ? 'text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            style={{ backgroundColor: activeTab === tab.key ? BRAND_COLORS.primary : undefined }}
+                          >
+                            <span className="mr-3">{tab.icon}</span>
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2 pt-4">
+                      <button
+                        onClick={() => {
+                          setNewEmployeeModalOpen(true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg"
+                        style={{ backgroundColor: BRAND_COLORS.primary }}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Add Staff Member
+                      </button>
+                      <button
+                        onClick={() => {
+                          showNotification('Payroll exported successfully', 'success');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Report
+                      </button>
+                      <button
+                        onClick={() => {
+                          showNotification('Data refreshed', 'info');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Refresh Data
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="space-y-6 sm:space-y-8">
+          {/* Desktop Tab Navigation */}
+          <div className="hidden sm:flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: BRAND_COLORS.primary }}>
+              <span className="hidden sm:inline">Restaurant Payroll Management</span>
+              <span className="sm:hidden">Payroll</span>
+            </h2>
+            <div className="flex flex-wrap gap-2 lg:gap-4 items-center">
+              {/* Tab Selector */}
+              <div className="flex gap-1 sm:gap-2">
+                {[
+                  { key: 'overview', label: 'Overview' },
+                  { key: 'employees', label: 'Staff' },
+                  { key: 'payroll-runs', label: 'Payroll Runs' },
+                  { key: 'tax-center', label: 'Tax Center' }
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key as any)}
+                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === tab.key
+                        ? 'text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    style={{ backgroundColor: activeTab === tab.key ? BRAND_COLORS.primary : undefined }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Tab Navigation */}
+          <div className="sm:hidden">
+            <h2 className="text-xl font-bold mb-4" style={{ color: BRAND_COLORS.primary }}>Payroll Dashboard</h2>
+            <div className="flex gap-1 overflow-x-auto pb-2">
+              {[
+                { key: 'overview', label: 'Overview', icon: '📊' },
+                { key: 'employees', label: 'Staff', icon: '👥' },
+                { key: 'payroll-runs', label: 'Payroll', icon: '💰' },
+                { key: 'tax-center', label: 'Taxes', icon: '📋' }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg whitespace-nowrap transition-colors ${
+                    activeTab === tab.key
+                      ? 'text-white'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                  style={{ backgroundColor: activeTab === tab.key ? BRAND_COLORS.primary : undefined }}
+                >
+                  <span>{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <>
-              {/* Restaurant Payroll KPIs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.primary }}>
+              {/* KPIs */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.primary }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Total Staff</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{payrollSummary.totalEmployees}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Total Staff</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{payrollSummary.totalEmployees}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        +2 this month
+                        <span className="hidden sm:inline">+2 this month</span>
+                        <span className="sm:hidden">+2</span>
                       </div>
                     </div>
-                    <Users className="w-8 h-8" style={{ color: BRAND_COLORS.primary }} />
+                    <Users className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.primary }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Monthly Payroll</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.monthlyPayroll)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Monthly Payroll</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.monthlyPayroll)}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        +5.2% vs last month
+                        <span className="hidden sm:inline">+5.2% vs last month</span>
+                        <span className="sm:hidden">+5.2%</span>
                       </div>
                     </div>
-                    <DollarSign className="w-8 h-8" style={{ color: BRAND_COLORS.success }} />
+                    <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.success }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.secondary }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.secondary }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Monthly Tips</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.monthlyTips)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Monthly Tips</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.monthlyTips)}</div>
                       <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full inline-block">
-                        +3.8% vs last month
+                        <span className="hidden sm:inline">+3.8% vs last month</span>
+                        <span className="sm:hidden">+3.8%</span>
                       </div>
                     </div>
-                    <TrendingUp className="w-8 h-8" style={{ color: BRAND_COLORS.secondary }} />
+                    <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.secondary }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.tertiary }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.tertiary }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Average Pay</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.avgSalary)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Average Pay</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.avgSalary)}</div>
                       <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full inline-block">
-                        +2.1% vs last year
+                        <span className="hidden sm:inline">+2.1% vs last year</span>
+                        <span className="sm:hidden">+2.1%</span>
                       </div>
                     </div>
-                    <BarChart3 className="w-8 h-8" style={{ color: BRAND_COLORS.tertiary }} />
+                    <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.tertiary }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.danger }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.danger }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Quarterly Taxes</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.quarterlyTaxes)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Quarterly Taxes</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.quarterlyTaxes)}</div>
                       <div className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full inline-block">
-                        Due July 15th
+                        <span className="hidden sm:inline">Due July 15th</span>
+                        <span className="sm:hidden">Due 7/15</span>
                       </div>
                     </div>
-                    <Receipt className="w-8 h-8" style={{ color: BRAND_COLORS.danger }} />
+                    <Receipt className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.danger }} />
                   </div>
                 </div>
               </div>
 
               {/* Charts Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Restaurant Payroll Trend */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                {/* Payroll Trend */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">6-Month Restaurant Payroll Trend</h3>
-                    <p className="text-sm text-gray-600 mt-1">Gross pay, net pay, tips, taxes, and deductions</p>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">6-Month Payroll Trend</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Gross pay, net pay, tips, taxes, and deductions</p>
                   </div>
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={300}>
+                  <div className="p-4 sm:p-6">
+                    <ResponsiveContainer width="100%" height={250}>
                       <ComposedChart data={trendData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                        <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                         <Tooltip formatter={(value) => [formatCurrency(Number(value)), '']} />
                         <Legend />
                         <Bar dataKey="grossPay" fill={BRAND_COLORS.primary} name="Gross Pay" />
@@ -1077,22 +1187,23 @@ export default function RestaurantPayrollPage() {
 
                 {/* Department Cost Breakdown */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">Department Payroll Costs</h3>
-                    <p className="text-sm text-gray-600 mt-1">Monthly payroll allocation by department</p>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Department Costs</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Monthly payroll by department</p>
                   </div>
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={300}>
+                  <div className="p-4 sm:p-6">
+                    <ResponsiveContainer width="100%" height={250}>
                       <RechartsPieChart>
                         <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Monthly Cost']} />
                         <Pie
                           data={departmentData}
                           cx="50%"
                           cy="50%"
-                          outerRadius={100}
+                          outerRadius={80}
                           fill="#8884d8"
                           dataKey="cost"
                           label={({ department, percent }) => `${department}: ${(percent * 100).toFixed(0)}%`}
+                          labelStyle={{ fontSize: 12 }}
                         >
                           {departmentData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -1105,16 +1216,16 @@ export default function RestaurantPayrollPage() {
 
                 {/* Location Breakdown */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">Location Payroll Costs</h3>
-                    <p className="text-sm text-gray-600 mt-1">Monthly payroll by restaurant location</p>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Location Costs</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Monthly payroll by location</p>
                   </div>
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={300}>
+                  <div className="p-4 sm:p-6">
+                    <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={locationData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="location" />
-                        <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                        <XAxis dataKey="location" tick={{ fontSize: 12 }} />
+                        <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                         <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Monthly Cost']} />
                         <Bar dataKey="cost" fill={BRAND_COLORS.secondary} />
                       </BarChart>
@@ -1124,26 +1235,26 @@ export default function RestaurantPayrollPage() {
 
                 {/* Recent Payroll Runs */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">Recent Payroll Runs</h3>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Recent Payroll Runs</h3>
                   </div>
-                  <div className="p-6">
-                    <div className="space-y-4">
+                  <div className="p-4 sm:p-6">
+                    <div className="space-y-3 sm:space-y-4">
                       {payrollRuns.slice(0, 3).map((run) => (
-                        <div key={run.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div>
-                            <div className="font-medium text-gray-900">
+                        <div key={run.id} className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-gray-900 text-sm sm:text-base">
                               {formatDate(run.payPeriodStart)} - {formatDate(run.payPeriodEnd)}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-xs sm:text-sm text-gray-600">
                               {run.totalEmployees} staff • Pay date: {formatDate(run.payDate)}
                             </div>
-                            <div className="text-sm text-green-600">
+                            <div className="text-xs sm:text-sm text-green-600">
                               Tips: {formatCurrency(run.totalTips)}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-medium text-gray-900">{formatCurrency(run.totalNetPay)}</div>
+                          <div className="text-right ml-2">
+                            <div className="font-medium text-gray-900 text-sm sm:text-base">{formatCurrency(run.totalNetPay)}</div>
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(run.status)}`}>
                               {run.status}
                             </span>
@@ -1160,8 +1271,67 @@ export default function RestaurantPayrollPage() {
           {/* Staff Tab */}
           {activeTab === 'employees' && (
             <>
-              {/* Staff Filters */}
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              {/* Mobile Filters */}
+              <div className="sm:hidden">
+                <button
+                  onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+                  className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white text-sm"
+                >
+                  <span>Filters & Search</span>
+                  <Filter className="w-4 h-4" />
+                </button>
+                
+                {mobileFiltersOpen && (
+                  <div className="mt-3 p-4 border border-gray-300 rounded-lg bg-white space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Search Staff</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          placeholder="Search staff..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                      <select
+                        value={departmentFilter}
+                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                      >
+                        {departments.map((dept) => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                      <select
+                        value={locationFilter}
+                        onChange={(e) => setLocationFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                      >
+                        {locations.map((location) => (
+                          <option key={location} value={location}>{location}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      Showing {filteredEmployees.length} of {employees.length} staff members
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Filters */}
+              <div className="hidden sm:flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex gap-4 items-center">
                   {/* Search */}
                   <div className="relative">
@@ -1176,60 +1346,26 @@ export default function RestaurantPayrollPage() {
                   </div>
 
                   {/* Department Filter */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setDepartmentDropdownOpen(!departmentDropdownOpen)}
-                      className="flex items-center justify-between w-48 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    >
-                      <span>{departmentFilter}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${departmentDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {departmentDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-                        {departments.map((dept) => (
-                          <div
-                            key={dept}
-                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm"
-                            onClick={() => {
-                              setDepartmentFilter(dept);
-                              setDepartmentDropdownOpen(false);
-                            }}
-                          >
-                            {dept}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <select
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  >
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
 
                   {/* Location Filter */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                      className="flex items-center justify-between w-48 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    >
-                      <span>{locationFilter}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${locationDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {locationDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-                        {locations.map((location) => (
-                          <div
-                            key={location}
-                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm"
-                            onClick={() => {
-                              setLocationFilter(location);
-                              setLocationDropdownOpen(false);
-                            }}
-                          >
-                            {location}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <select
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  >
+                    {locations.map((location) => (
+                      <option key={location} value={location}>{location}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="text-sm text-gray-600">
@@ -1238,20 +1374,20 @@ export default function RestaurantPayrollPage() {
               </div>
 
               {/* Staff Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredEmployees.map((employee) => (
                   <div key={employee.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="p-6">
+                    <div className="p-4 sm:p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center">
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg" style={{ backgroundColor: BRAND_COLORS.primary }}>
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-lg" style={{ backgroundColor: BRAND_COLORS.primary }}>
                             {employee.firstName[0]}{employee.lastName[0]}
                           </div>
-                          <div className="ml-3">
-                            <h3 className="font-semibold text-gray-900">{employee.firstName} {employee.lastName}</h3>
-                            <p className="text-sm text-gray-600 flex items-center">
+                          <div className="ml-3 min-w-0 flex-1">
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{employee.firstName} {employee.lastName}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600 flex items-center">
                               {getPositionIcon(employee.position)}
-                              <span className="ml-1">{employee.position}</span>
+                              <span className="ml-1 truncate">{employee.position}</span>
                             </p>
                           </div>
                         </div>
@@ -1261,34 +1397,34 @@ export default function RestaurantPayrollPage() {
                       </div>
 
                       <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Building2 className="w-4 h-4 mr-2" />
-                          {employee.department} • {employee.location}
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{employee.department} • {employee.location}</span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Mail className="w-4 h-4 mr-2" />
-                          {employee.email}
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{employee.email}</span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Phone className="w-4 h-4 mr-2" />
-                          {employee.phone}
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span>{employee.phone}</span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Started {formatDate(employee.startDate)}
+                        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                          <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span>Started {formatDate(employee.startDate)}</span>
                         </div>
                         {employee.avgHoursPerWeek && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Clock className="w-4 h-4 mr-2" />
-                            {employee.avgHoursPerWeek} hrs/week avg
+                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                            <span>{employee.avgHoursPerWeek} hrs/week avg</span>
                           </div>
                         )}
                       </div>
 
                       <div className="border-t border-gray-200 pt-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600">Compensation</span>
-                          <span className="font-medium text-gray-900">
+                          <span className="text-xs sm:text-sm text-gray-600">Compensation</span>
+                          <span className="font-medium text-gray-900 text-xs sm:text-sm">
                             {employee.payType === 'salary' 
                               ? formatCurrency(employee.salary || 0) + '/year'
                               : formatCurrency(employee.hourlyRate || 0) + '/hour'
@@ -1296,13 +1432,13 @@ export default function RestaurantPayrollPage() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600">Employment Type</span>
-                          <span className="text-sm font-medium text-gray-900 capitalize">{employee.employeeType}</span>
+                          <span className="text-xs sm:text-sm text-gray-600">Employment Type</span>
+                          <span className="text-xs sm:text-sm font-medium text-gray-900 capitalize">{employee.employeeType}</span>
                         </div>
                         
                         {employee.certifications.length > 0 && (
                           <div className="mb-4">
-                            <span className="text-sm text-gray-600">Certifications:</span>
+                            <span className="text-xs sm:text-sm text-gray-600">Certifications:</span>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {employee.certifications.slice(0, 2).map((cert, index) => (
                                 <span key={index} className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
@@ -1321,14 +1457,14 @@ export default function RestaurantPayrollPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => showNotification(`Viewing ${employee.firstName} ${employee.lastName}'s details`, 'info')}
-                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="flex-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                           >
                             <Eye className="w-4 h-4 inline mr-1" />
                             View
                           </button>
                           <button
                             onClick={() => showNotification(`Editing ${employee.firstName} ${employee.lastName}'s profile`, 'info')}
-                            className="flex-1 px-3 py-2 text-sm text-white rounded-lg hover:opacity-90 transition-colors"
+                            className="flex-1 px-3 py-2 text-xs sm:text-sm text-white rounded-lg hover:opacity-90 transition-colors"
                             style={{ backgroundColor: BRAND_COLORS.primary }}
                           >
                             <Edit3 className="w-4 h-4 inline mr-1" />
@@ -1346,12 +1482,12 @@ export default function RestaurantPayrollPage() {
           {/* Payroll Runs Tab */}
           {activeTab === 'payroll-runs' && (
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold text-gray-900">Restaurant Payroll Processing History</h3>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Restaurant Payroll Processing History</h3>
                   <button
                     onClick={() => showNotification('New restaurant payroll run created', 'success')}
-                    className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                     style={{ backgroundColor: BRAND_COLORS.primary }}
                   >
                     <Plus className="w-4 h-4" />
@@ -1359,7 +1495,69 @@ export default function RestaurantPayrollPage() {
                   </button>
                 </div>
               </div>
-              <div className="overflow-x-auto">
+              
+              {/* Mobile Payroll Runs */}
+              <div className="sm:hidden">
+                <div className="p-4 space-y-4">
+                  {payrollRuns.map((run) => (
+                    <div key={run.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">
+                            {formatDate(run.payPeriodStart)} - {formatDate(run.payPeriodEnd)}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            Pay date: {formatDate(run.payDate)}
+                          </div>
+                        </div>
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(run.status)}`}>
+                          {run.status}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Staff:</span>
+                          <span className="ml-2 font-medium">{run.totalEmployees}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Gross Pay:</span>
+                          <span className="ml-2 font-medium">{formatCurrency(run.totalGrossPay)}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Tips:</span>
+                          <span className="ml-2 font-medium text-green-600">{formatCurrency(run.totalTips)}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Net Pay:</span>
+                          <span className="ml-2 font-medium">{formatCurrency(run.totalNetPay)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t border-gray-200 flex gap-2">
+                        <button
+                          onClick={() => showNotification(`Viewing payroll run details`, 'info')}
+                          className="flex-1 text-xs px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          View Details
+                        </button>
+                        {run.status === 'completed' && (
+                          <button
+                            onClick={() => showNotification(`Pay stubs downloaded`, 'success')}
+                            className="flex-1 text-xs px-3 py-2 text-white rounded-lg hover:opacity-90"
+                            style={{ backgroundColor: BRAND_COLORS.primary }}
+                          >
+                            Download
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1426,72 +1624,76 @@ export default function RestaurantPayrollPage() {
 
           {/* Tax Center Tab */}
           {activeTab === 'tax-center' && (
-            <div className="space-y-8">
-              {/* Restaurant Tax Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.danger }}>
+            <div className="space-y-6 sm:space-y-8">
+              {/* Tax Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.danger }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Total Tax Liability</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Total Tax Liability</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">
                         {formatCurrency(taxLiabilities.reduce((sum, tax) => sum + tax.amount, 0))}
                       </div>
                       <div className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full inline-block">
-                        4 payments due
+                        <span className="hidden sm:inline">4 payments due</span>
+                        <span className="sm:hidden">4 due</span>
                       </div>
                     </div>
-                    <Receipt className="w-8 h-8" style={{ color: BRAND_COLORS.danger }} />
+                    <Receipt className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.danger }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.warning }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.warning }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Next Payment Due</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">July 15</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Next Payment Due</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">July 15</div>
                       <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full inline-block">
-                        Federal & State
+                        <span className="hidden sm:inline">Federal & State</span>
+                        <span className="sm:hidden">Fed & State</span>
                       </div>
                     </div>
-                    <Calendar className="w-8 h-8" style={{ color: BRAND_COLORS.warning }} />
+                    <Calendar className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.warning }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">YTD Tax Paid</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(22800)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">YTD Tax Paid</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(22800)}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        On schedule
+                        <span className="hidden sm:inline">On schedule</span>
+                        <span className="sm:hidden">On track</span>
                       </div>
                     </div>
-                    <CheckCircle className="w-8 h-8" style={{ color: BRAND_COLORS.success }} />
+                    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.success }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.secondary }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.secondary }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Tip Reporting</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.monthlyTips * 6)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Tip Reporting</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(payrollSummary.monthlyTips * 6)}</div>
                       <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full inline-block">
-                        YTD Tips Reported
+                        <span className="hidden sm:inline">YTD Tips Reported</span>
+                        <span className="sm:hidden">YTD Tips</span>
                       </div>
                     </div>
-                    <TrendingUp className="w-8 h-8" style={{ color: BRAND_COLORS.secondary }} />
+                    <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.secondary }} />
                   </div>
                 </div>
               </div>
 
-              {/* Tax Liabilities Table */}
+              {/* Tax Liabilities */}
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-gray-900">Upcoming Tax Liabilities</h3>
+                <div className="p-4 sm:p-6 border-b border-gray-200">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Upcoming Tax Liabilities</h3>
                     <button
                       onClick={() => showNotification('Tax payment scheduled', 'success')}
-                      className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                       style={{ backgroundColor: BRAND_COLORS.primary }}
                     >
                       <Plus className="w-4 h-4" />
@@ -1499,7 +1701,59 @@ export default function RestaurantPayrollPage() {
                     </button>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+                
+                {/* Mobile Tax Liabilities */}
+                <div className="sm:hidden">
+                  <div className="p-4 space-y-4">
+                    {taxLiabilities.map((tax) => (
+                      <div key={tax.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="font-medium text-gray-900 text-sm capitalize">
+                              {tax.taxType.replace('-', ' ')}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {tax.quarter} {tax.year}
+                            </div>
+                          </div>
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(tax.status)}`}>
+                            {tax.status}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                          <div>
+                            <span className="text-gray-600">Amount:</span>
+                            <span className="ml-2 font-medium">{formatCurrency(tax.amount)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Due:</span>
+                            <span className="ml-2 font-medium">{formatDate(tax.dueDate)}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => showNotification(`Processing payment for ${tax.taxType} tax`, 'info')}
+                            className="flex-1 text-xs px-3 py-2 text-white rounded-lg hover:opacity-90"
+                            style={{ backgroundColor: BRAND_COLORS.primary }}
+                          >
+                            Pay Now
+                          </button>
+                          <button
+                            onClick={() => showNotification(`Viewing ${tax.taxType} tax details`, 'info')}
+                            className="flex-1 text-xs px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
@@ -1553,16 +1807,16 @@ export default function RestaurantPayrollPage() {
                 </div>
               </div>
 
-              {/* Restaurant Compliance Alerts */}
+              {/* Compliance Alerts */}
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900">Restaurant Compliance & Alerts</h3>
+                <div className="p-4 sm:p-6 border-b border-gray-200">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Restaurant Compliance & Alerts</h3>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="space-y-4">
-                    <div className="flex items-start p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-medium text-yellow-800">Tip Reporting Due</h4>
                         <p className="text-sm text-yellow-700 mt-1">
                           Monthly tip reporting for June is due by July 10th. All tipped employees' tip income must be reported.
@@ -1576,9 +1830,9 @@ export default function RestaurantPayrollPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-start p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <FileText className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-medium text-blue-800">Quarterly Forms Available</h4>
                         <p className="text-sm text-blue-700 mt-1">
                           Q2 2025 forms (941, 940, state unemployment) are ready for review and submission.
@@ -1592,9 +1846,9 @@ export default function RestaurantPayrollPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-start p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
                       <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-medium text-green-800">ServSafe Certifications Up to Date</h4>
                         <p className="text-sm text-green-700 mt-1">
                           All kitchen staff have current food safety certifications. Next renewal due: March 2026.
@@ -1602,9 +1856,9 @@ export default function RestaurantPayrollPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-start p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
                       <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-medium text-red-800">Workers' Compensation Premium Due</h4>
                         <p className="text-sm text-red-700 mt-1">
                           Annual workers' compensation insurance premium of $1,850 is due August 15th.
@@ -1624,17 +1878,6 @@ export default function RestaurantPayrollPage() {
           )}
         </div>
       </main>
-
-      {/* Click outside to close dropdowns */}
-      {(departmentDropdownOpen || locationDropdownOpen) && (
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => {
-            setDepartmentDropdownOpen(false);
-            setLocationDropdownOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 }
