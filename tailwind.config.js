@@ -3,8 +3,13 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,ts,jsx,tsx}",  // adjust if needed
-  ],
+  "./src/**/*.{js,ts,jsx,tsx}",
+  "./pages/**/*.{js,ts,jsx,tsx}",
+  "./components/**/*.{js,ts,jsx,tsx}",
+  "./app/**/*.{js,ts,jsx,tsx}",
+  "./index.html" // include if using Vite or plain HTML templates
+],
+
   theme: {
     extend: {
       colors: {
