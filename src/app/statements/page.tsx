@@ -9,7 +9,7 @@ import {
   FileText, Calculator, Receipt, Clock, Edit3, Trash2, Eye,
   MapPin, Phone, Mail, Briefcase, Award, Target, File, FileCheck,
   Send, Archive, Printer, Share2, ExternalLink, ChefHat, Utensils,
-  TrendingDown, Activity, BookOpen, ShoppingCart
+  TrendingDown, Activity, BookOpen, ShoppingCart, Menu
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
@@ -96,45 +96,6 @@ interface RestaurantStatement {
   };
 }
 
-interface RevenueItem {
-  restaurant: string;
-  category: string;
-  description: string;
-  amount: number;
-  date: string;
-}
-
-interface ExpenseItem {
-  restaurant: string;
-  category: string;
-  description: string;
-  amount: number;
-  date: string;
-}
-
-interface RestaurantStatementDetail {
-  statement: RestaurantStatement;
-  revenues: RevenueItem[];
-  expenses: ExpenseItem[];
-  summary: {
-    totalGrossRevenue: number;
-    totalFoodCosts: number;
-    totalLaborCosts: number;
-    totalOperatingExpenses: number;
-    managementFee: number;
-    netIncome: number;
-    ownerPayout: number;
-  };
-  performance: {
-    customerTraffic: number;
-    avgTicketSize: number;
-    foodCostPercent: number;
-    laborCostPercent: number;
-    totalCoversServed: number;
-    revenuePerSqFt: number;
-  };
-}
-
 interface NotificationState {
   show: boolean;
   message: string;
@@ -142,13 +103,13 @@ interface NotificationState {
 }
 
 // Restaurant CFO Logo Component
-const IAMCFOLogo = ({ className = "w-12 h-12" }: { className?: string }) => (
+const IAMCFOLogo = ({ className = "w-8 h-8 sm:w-12 sm:h-12" }: { className?: string }) => (
   <div className={`${className} flex items-center justify-center relative`}>
     <img 
       src="/favicon.png" 
       alt="IAM CFO Logo" 
       className="w-full h-full object-contain rounded"
-      style={{ minWidth: '48px', minHeight: '48px' }}
+      style={{ minWidth: '32px', minHeight: '32px' }}
     />
   </div>
 );
@@ -165,11 +126,8 @@ export default function RestaurantStatementsPage() {
   const [startDate, setStartDate] = useState('2025-01-01');
   const [endDate, setEndDate] = useState('2025-06-30');
   const [useTimeframe, setUseTimeframe] = useState(false);
-  const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
-  const [restaurantDropdownOpen, setRestaurantDropdownOpen] = useState(false);
-  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [statementDetailModalOpen, setStatementDetailModalOpen] = useState(false);
-  const [selectedStatementDetail, setSelectedStatementDetail] = useState<RestaurantStatementDetail | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Sample restaurant data
   const restaurantOwners: RestaurantOwner[] = [
@@ -423,21 +381,27 @@ export default function RestaurantStatementsPage() {
   const restaurantNames = ['All Restaurants', ...Array.from(new Set(restaurants.map(r => r.name)))];
 
   // Utility functions
-  const isDateInRange = (dateString: string): boolean => {
-    if (!useTimeframe) return true;
-    const date = new Date(dateString);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    return date >= start && date <= end;
-  };
-
   const formatCurrency = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}k`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatNumber = (value: number): string => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}k`;
+    }
+    return value.toLocaleString();
   };
 
   const formatDate = (dateString: string): string => {
@@ -473,23 +437,9 @@ export default function RestaurantStatementsPage() {
     }
   };
 
-  const getPartnershipTypeColor = (type: string): string => {
-    switch (type) {
-      case 'full-owner':
-        return 'bg-green-100 text-green-800';
-      case 'investor':
-        return 'bg-blue-100 text-blue-800';
-      case 'franchise-partner':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const getFilteredStatements = () => {
     return restaurantStatements.filter(statement => {
-      const matchesPeriod = useTimeframe || selectedPeriod === 'All Periods' || statement.period === selectedPeriod;
-      const matchesTimeframe = !useTimeframe || isDateInRange(statement.generatedDate);
+      const matchesPeriod = selectedPeriod === 'All Periods' || statement.period === selectedPeriod;
       const matchesOwner = selectedOwner === 'All Owners' || statement.ownerName === selectedOwner;
       const matchesRestaurant = selectedRestaurant === 'All Restaurants' || 
         statement.restaurants.includes(selectedRestaurant);
@@ -500,7 +450,7 @@ export default function RestaurantStatementsPage() {
         statement.statementNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         statement.restaurants.some(rest => rest.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      return matchesPeriod && matchesTimeframe && matchesOwner && matchesRestaurant && matchesStatus && matchesSearch;
+      return matchesPeriod && matchesOwner && matchesRestaurant && matchesStatus && matchesSearch;
     });
   };
 
@@ -563,96 +513,20 @@ export default function RestaurantStatementsPage() {
     }));
   };
 
-  const viewStatementDetail = (statementId: string) => {
-    const statement = restaurantStatements.find(s => s.id === statementId);
-    if (!statement) return;
-
-    // Generate sample detail data for restaurants
-    const revenues: RevenueItem[] = [
-      { restaurant: 'Bella Italia Downtown', category: 'Food Sales', description: 'Dinner Service Revenue', amount: 89000, date: '2025-06-30' },
-      { restaurant: 'Bella Italia Downtown', category: 'Beverage Sales', description: 'Wine & Cocktail Sales', amount: 28000, date: '2025-06-30' },
-      { restaurant: 'Bella Italia Downtown', category: 'Private Events', description: 'Corporate Catering', amount: 8000, date: '2025-06-15' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Food Sales', description: 'Pizza & Appetizer Sales', amount: 45000, date: '2025-06-30' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Beverage Sales', description: 'Beer & Soft Drinks', amount: 12000, date: '2025-06-30' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Delivery/Takeout', description: 'Third-party Delivery Fees', amount: 3000, date: '2025-06-30' }
-    ];
-
-    const expenses: ExpenseItem[] = [
-      { restaurant: 'Bella Italia Downtown', category: 'Food Costs', description: 'Ingredients & Supplies', amount: 35000, date: '2025-06-30' },
-      { restaurant: 'Bella Italia Downtown', category: 'Labor', description: 'Kitchen & Service Staff', amount: 40000, date: '2025-06-30' },
-      { restaurant: 'Bella Italia Downtown', category: 'Rent', description: 'Monthly Lease Payment', amount: 12000, date: '2025-06-01' },
-      { restaurant: 'Bella Italia Downtown', category: 'Utilities', description: 'Electric, Gas, Water', amount: 3200, date: '2025-06-15' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Food Costs', description: 'Pizza Ingredients', amount: 15000, date: '2025-06-30' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Labor', description: 'Staff Wages & Benefits', amount: 21000, date: '2025-06-30' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Rent', description: 'Monthly Lease Payment', amount: 8500, date: '2025-06-01' },
-      { restaurant: 'Romano\'s Pizzeria', category: 'Marketing', description: 'Social Media Advertising', amount: 1800, date: '2025-06-20' }
-    ];
-
-    const managementFee = statement.totalRevenue * 0.08; // 8% for restaurants
-    const ownerPayout = statement.netIncome - managementFee;
-
-    const statementDetail: RestaurantStatementDetail = {
-      statement,
-      revenues,
-      expenses,
-      summary: {
-        totalGrossRevenue: statement.totalRevenue,
-        totalFoodCosts: Math.round(statement.totalRevenue * 0.27),
-        totalLaborCosts: Math.round(statement.totalRevenue * 0.31),
-        totalOperatingExpenses: Math.round(statement.totalRevenue * 0.12),
-        managementFee,
-        netIncome: statement.netIncome,
-        ownerPayout
-      },
-      performance: {
-        customerTraffic: statement.performanceMetrics.totalCustomers,
-        avgTicketSize: statement.performanceMetrics.avgTicketSize,
-        foodCostPercent: statement.performanceMetrics.foodCostPercent,
-        laborCostPercent: statement.performanceMetrics.laborCostPercent,
-        totalCoversServed: statement.performanceMetrics.totalCustomers,
-        revenuePerSqFt: Math.round(statement.totalRevenue / 150) // Assuming avg 150 sq ft per restaurant
-      }
-    };
-
-    setSelectedStatementDetail(statementDetail);
-    setStatementDetailModalOpen(true);
-  };
-
-  const handleDownloadStatement = (statementId: string) => {
-    const statement = restaurantStatements.find(s => s.id === statementId);
-    if (statement) {
-      showNotification(`Downloaded restaurant statement ${statement.statementNumber} for ${statement.ownerName}`, 'success');
-    }
-  };
-
-  const handleSendStatement = (statementId: string) => {
-    const statement = restaurantStatements.find(s => s.id === statementId);
-    if (statement) {
-      showNotification(`Restaurant statement ${statement.statementNumber} sent to ${statement.ownerName}`, 'success');
-    }
-  };
-
-  const handleBulkAction = (action: string) => {
-    const filteredStatements = getFilteredStatements();
-    showNotification(`${action} applied to ${filteredStatements.length} restaurant statements`, 'success');
-  };
-
   const summaryStats = calculateSummaryStats();
   const trendData = generateRestaurantTrendData();
   const ownerRevenueData = generateOwnerRevenueData();
   const filteredStatements = getFilteredStatements();
 
-  const CHART_COLORS = [BRAND_COLORS.primary, BRAND_COLORS.success, BRAND_COLORS.warning, BRAND_COLORS.danger, BRAND_COLORS.secondary];
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Notification */}
       {notification.show && (
-        <div className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-          notification.type === 'success' ? 'bg-green-100 text-green-800' :
-          notification.type === 'error' ? 'bg-red-100 text-red-800' :
-          notification.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-blue-100 text-blue-800'
+        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 sm:top-4 sm:right-4 sm:left-auto sm:transform-none z-50 px-4 sm:px-6 py-3 sm:py-4 rounded-lg text-white font-medium shadow-lg transition-all max-w-xs sm:max-w-none text-sm sm:text-base ${
+          notification.type === 'success' ? 'bg-green-500' :
+          notification.type === 'error' ? 'bg-red-500' :
+          notification.type === 'warning' ? 'bg-yellow-500' :
+          'bg-blue-500'
         }`}>
           <div className="flex items-center justify-between">
             <span>{notification.message}</span>
@@ -666,235 +540,315 @@ export default function RestaurantStatementsPage() {
         </div>
       )}
 
-      {/* Page Header with IAM CFO Branding */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center">
-            <IAMCFOLogo className="w-8 h-8 mr-4" />
-            <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold text-gray-900">I AM CFO</h1>
-                <span className="text-sm px-3 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
-                  Restaurant Owner Statements
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">Restaurant financial reporting • Performance analytics • Owner distribution statements</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Header Controls */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <h2 className="text-3xl font-bold" style={{ color: BRAND_COLORS.primary }}>Restaurant Owner Statements</h2>
-            <div className="flex flex-wrap gap-4 items-center">
-              {/* Tab Selector */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'overview'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'overview' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Overview
-                </button>
-                <button
-                  onClick={() => setActiveTab('statements')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'statements'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'statements' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Statements
-                </button>
-                <button
-                  onClick={() => setActiveTab('owners')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'owners'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'owners' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Restaurant Owners
-                </button>
-                <button
-                  onClick={() => setActiveTab('templates')}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    activeTab === 'templates'
-                      ? 'text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  style={{ backgroundColor: activeTab === 'templates' ? BRAND_COLORS.primary : undefined }}
-                >
-                  Templates
-                </button>
-              </div>
-
-              {/* Period/Time Range Controls */}
-              <div className="flex items-center gap-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={useTimeframe}
-                    onChange={(e) => setUseTimeframe(e.target.checked)}
-                    className="mr-2 h-4 w-4 border-gray-300 rounded"
-                    style={{ accentColor: BRAND_COLORS.primary }}
-                  />
-                  <span className="text-sm text-gray-700">Custom Date Range</span>
-                </label>
-              </div>
-
-              {useTimeframe ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
-                  <span className="text-sm text-gray-500">to</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
+      {/* Page Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <IAMCFOLogo className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4" />
+              <div>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">I AM CFO</h1>
+                  <span className="text-xs sm:text-sm px-2 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
+                    <span className="hidden sm:inline">Restaurant Owner Statements</span>
+                    <span className="sm:hidden">Statements</span>
+                  </span>
                 </div>
-              ) : (
-                <select
-                  value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                >
-                  {periods.map((period) => (
-                    <option key={period} value={period}>{period}</option>
-                  ))}
-                </select>
-              )}
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">Restaurant financial reporting • Performance analytics • Owner distribution statements</p>
+              </div>
+            </div>
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2 rounded-lg border border-gray-300 bg-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-              {/* Action Buttons */}
+            {/* Desktop Action Buttons */}
+            <div className="hidden sm:flex gap-2">
               <button
-                onClick={() => showNotification('Generating restaurant statements for all owners...', 'info')}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
+                onClick={() => showNotification('Generating restaurant statements...', 'info')}
+                className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                 style={{ backgroundColor: BRAND_COLORS.primary }}
               >
                 <Plus className="w-4 h-4" />
-                Generate Statements
+                <span className="hidden lg:inline">Generate</span>
               </button>
-
               <button
-                onClick={() => showNotification('Restaurant statements exported successfully', 'success')}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
+                onClick={() => showNotification('Exporting all statements...', 'success')}
+                className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                 style={{ backgroundColor: BRAND_COLORS.success }}
               >
                 <Download className="w-4 h-4" />
-                Export All
+                <span className="hidden lg:inline">Export</span>
               </button>
+            </div>
+          </div>
 
-              <button
-                onClick={() => showNotification('Restaurant statement data refreshed', 'info')}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden" onClick={() => setMobileMenuOpen(false)}>
+              <div className="fixed top-0 right-0 w-80 max-w-full h-full bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Menu</h3>
+                    <button onClick={() => setMobileMenuOpen(false)}>
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Tab Navigation */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
+                      <div className="space-y-2">
+                        {[
+                          { key: 'overview', label: 'Overview', icon: '📊' },
+                          { key: 'statements', label: 'Statements', icon: '📄' },
+                          { key: 'owners', label: 'Owners', icon: '👥' },
+                          { key: 'templates', label: 'Templates', icon: '📋' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => {
+                              setActiveTab(tab.key as any);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center p-3 rounded-lg text-left transition-colors ${
+                              activeTab === tab.key
+                                ? 'text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            style={{ backgroundColor: activeTab === tab.key ? BRAND_COLORS.primary : undefined }}
+                          >
+                            <span className="mr-3">{tab.icon}</span>
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Filters */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+                      <select
+                        value={selectedPeriod}
+                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                      >
+                        {periods.map((period) => (
+                          <option key={period} value={period}>{period}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2 pt-4">
+                      <button
+                        onClick={() => {
+                          showNotification('Generating statements...', 'info');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg"
+                        style={{ backgroundColor: BRAND_COLORS.primary }}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Generate Statements
+                      </button>
+                      <button
+                        onClick={() => {
+                          showNotification('Exporting all statements...', 'success');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export All
+                      </button>
+                      <button
+                        onClick={() => {
+                          showNotification('Data refreshed', 'info');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Refresh Data
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="space-y-6 sm:space-y-8">
+          {/* Desktop Tab Navigation */}
+          <div className="hidden sm:flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: BRAND_COLORS.primary }}>
+              <span className="hidden sm:inline">Restaurant Owner Statements</span>
+              <span className="sm:hidden">Statements</span>
+            </h2>
+            <div className="flex flex-wrap gap-2 lg:gap-4 items-center">
+              {/* Tab Selector */}
+              <div className="flex gap-1 sm:gap-2">
+                {[
+                  { key: 'overview', label: 'Overview' },
+                  { key: 'statements', label: 'Statements' },
+                  { key: 'owners', label: 'Owners' },
+                  { key: 'templates', label: 'Templates' }
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key as any)}
+                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                      activeTab === tab.key
+                        ? 'text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    style={{ backgroundColor: activeTab === tab.key ? BRAND_COLORS.primary : undefined }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Period Selector */}
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
+                {periods.map((period) => (
+                  <option key={period} value={period}>{period}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Mobile Tab Navigation */}
+          <div className="sm:hidden">
+            <h2 className="text-xl font-bold mb-4" style={{ color: BRAND_COLORS.primary }}>Statements Dashboard</h2>
+            <div className="flex gap-1 overflow-x-auto pb-2">
+              {[
+                { key: 'overview', label: 'Overview', icon: '📊' },
+                { key: 'statements', label: 'Statements', icon: '📄' },
+                { key: 'owners', label: 'Owners', icon: '👥' },
+                { key: 'templates', label: 'Templates', icon: '📋' }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg whitespace-nowrap transition-colors ${
+                    activeTab === tab.key
+                      ? 'text-white'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                  style={{ backgroundColor: activeTab === tab.key ? BRAND_COLORS.primary : undefined }}
+                >
+                  <span>{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <>
-              {/* Restaurant KPIs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.primary }}>
+              {/* KPIs */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.primary }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Total Revenue</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(summaryStats.totalRevenue)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Total Revenue</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(summaryStats.totalRevenue)}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        +12.3% vs last month
+                        <span className="hidden sm:inline">+12.3% vs last month</span>
+                        <span className="sm:hidden">+12.3%</span>
                       </div>
                     </div>
-                    <DollarSign className="w-8 h-8" style={{ color: BRAND_COLORS.primary }} />
+                    <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.primary }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Net Income</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(summaryStats.totalNetIncome)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Net Income</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(summaryStats.totalNetIncome)}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        +15.7% vs last month
+                        <span className="hidden sm:inline">+15.7% vs last month</span>
+                        <span className="sm:hidden">+15.7%</span>
                       </div>
                     </div>
-                    <TrendingUp className="w-8 h-8" style={{ color: BRAND_COLORS.success }} />
+                    <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.success }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.warning }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.warning }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Total Customers</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{summaryStats.totalCustomers.toLocaleString()}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Total Customers</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatNumber(summaryStats.totalCustomers)}</div>
                       <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full inline-block">
-                        +8.9% vs last month
+                        <span className="hidden sm:inline">+8.9% vs last month</span>
+                        <span className="sm:hidden">+8.9%</span>
                       </div>
                     </div>
-                    <Users className="w-8 h-8" style={{ color: BRAND_COLORS.warning }} />
+                    <Users className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.warning }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.secondary }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.secondary }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Avg Ticket Size</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{formatCurrency(summaryStats.avgTicketSize)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Avg Ticket</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{formatCurrency(summaryStats.avgTicketSize)}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        +3.1% vs last month
+                        <span className="hidden sm:inline">+3.1% vs last month</span>
+                        <span className="sm:hidden">+3.1%</span>
                       </div>
                     </div>
-                    <Receipt className="w-8 h-8" style={{ color: BRAND_COLORS.secondary }} />
+                    <Receipt className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.secondary }} />
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.danger }}>
+                <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.danger }}>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-gray-600 text-sm font-medium mb-2">Statements</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{summaryStats.totalStatements}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Statements</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">{summaryStats.totalStatements}</div>
                       <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
-                        {summaryStats.completionRate.toFixed(0)}% completion
+                        <span className="hidden sm:inline">{summaryStats.completionRate.toFixed(0)}% completion</span>
+                        <span className="sm:hidden">{summaryStats.completionRate.toFixed(0)}%</span>
                       </div>
                     </div>
-                    <FileText className="w-8 h-8" style={{ color: BRAND_COLORS.danger }} />
+                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.danger }} />
                   </div>
                 </div>
               </div>
 
               {/* Charts Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 {/* Restaurant Revenue Trend */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">6-Month Restaurant Performance</h3>
-                    <p className="text-sm text-gray-600 mt-1">Revenue, costs, and customer trends</p>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">6-Month Performance</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Revenue, costs, and customer trends</p>
                   </div>
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={300}>
+                  <div className="p-4 sm:p-6">
+                    <ResponsiveContainer width="100%" height={250}>
                       <ComposedChart data={trendData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis yAxisId="left" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                        <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                        <YAxis yAxisId="left" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+                        <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                         <Tooltip formatter={(value, name) => {
                           if (name === 'customers') return [Number(value).toLocaleString(), 'Customers'];
                           return [formatCurrency(Number(value)), name];
@@ -911,16 +865,16 @@ export default function RestaurantStatementsPage() {
 
                 {/* Owner Revenue Distribution */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">Owner Revenue Distribution</h3>
-                    <p className="text-sm text-gray-600 mt-1">Monthly revenue by restaurant owner</p>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Owner Revenue</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Monthly revenue by owner</p>
                   </div>
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={300}>
+                  <div className="p-4 sm:p-6">
+                    <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={ownerRevenueData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                        <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                         <Tooltip formatter={(value) => [formatCurrency(Number(value)), '']} />
                         <Legend />
                         <Bar dataKey="revenue" fill={BRAND_COLORS.primary} name="Revenue" />
@@ -930,30 +884,30 @@ export default function RestaurantStatementsPage() {
                   </div>
                 </div>
 
-                {/* Recent Restaurant Activity */}
+                {/* Recent Activity */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">Recent Statement Activity</h3>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Recent Activity</h3>
                   </div>
-                  <div className="p-6">
-                    <div className="space-y-4">
+                  <div className="p-4 sm:p-6">
+                    <div className="space-y-3 sm:space-y-4">
                       {restaurantStatements.slice(0, 4).map((statement) => (
-                        <div key={statement.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center">
-                            <ChefHat className="w-8 h-8 mr-3" style={{ color: BRAND_COLORS.primary }} />
-                            <div>
-                              <div className="font-medium text-gray-900">{statement.ownerName}</div>
-                              <div className="text-sm text-gray-600">
+                        <div key={statement.id} className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center min-w-0 flex-1">
+                            <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 flex-shrink-0" style={{ color: BRAND_COLORS.primary }} />
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-gray-900 text-sm sm:text-base truncate">{statement.ownerName}</div>
+                              <div className="text-xs sm:text-sm text-gray-600">
                                 {statement.statementNumber} • {statement.restaurants.length} restaurants
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 hidden sm:block">
                                 Avg ticket: {formatCurrency(statement.performanceMetrics.avgTicketSize)} • 
-                                {statement.performanceMetrics.totalCustomers.toLocaleString()} customers
+                                {formatNumber(statement.performanceMetrics.totalCustomers)} customers
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-medium text-gray-900">{formatCurrency(statement.netIncome)}</div>
+                          <div className="text-right ml-2">
+                            <div className="font-medium text-gray-900 text-sm sm:text-base">{formatCurrency(statement.netIncome)}</div>
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(statement.status)}`}>
                               {statement.status}
                             </span>
@@ -966,35 +920,35 @@ export default function RestaurantStatementsPage() {
 
                 {/* Quick Actions */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-900">Quick Actions</h3>
+                  <div className="p-4 sm:p-6 border-b border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Quick Actions</h3>
                   </div>
-                  <div className="p-6">
-                    <div className="space-y-3">
+                  <div className="p-4 sm:p-6">
+                    <div className="space-y-2 sm:space-y-3">
                       <button
-                        onClick={() => showNotification('Sending all pending restaurant statements...', 'info')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={() => showNotification('Sending all pending statements...', 'info')}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                       >
                         <Send className="w-4 h-4" />
-                        Send All Pending Statements
+                        Send All Pending
                       </button>
                       <button
-                        onClick={() => showNotification('Downloading all restaurant statements as ZIP...', 'info')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={() => showNotification('Downloading as ZIP...', 'info')}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                       >
                         <Archive className="w-4 h-4" />
                         Download All as ZIP
                       </button>
                       <button
-                        onClick={() => showNotification('Opening restaurant statement template editor...', 'info')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={() => showNotification('Opening template editor...', 'info')}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                       >
                         <Settings className="w-4 h-4" />
                         Customize Templates
                       </button>
                       <button
-                        onClick={() => showNotification('Setting up automated restaurant statements...', 'info')}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-colors"
+                        onClick={() => showNotification('Setting up auto-send...', 'info')}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 sm:py-3 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
                         style={{ backgroundColor: BRAND_COLORS.primary }}
                       >
                         <Calendar className="w-4 h-4" />
