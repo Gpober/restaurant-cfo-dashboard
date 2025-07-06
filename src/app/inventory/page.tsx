@@ -6,7 +6,7 @@ import {
   Package, AlertTriangle, CheckCircle, ChevronDown, ChevronRight,
   Search, Filter, BarChart3, PieChart, Truck, ShoppingCart,
   Clock, Users, MapPin, Star, Zap, Activity, Minus, Plus,
-  FileText, Calculator, Receipt, Building2, Key, Wrench
+  FileText, Calculator, Receipt, Building2, Key, Wrench, Menu, X
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
@@ -14,15 +14,15 @@ import {
   ComposedChart, ScatterChart, Scatter
 } from 'recharts';
 
-// Restaurant CFO Brand Colors (Consistent with your existing theme)
+// Restaurant CFO Brand Colors
 const BRAND_COLORS = {
-  primary: '#56B6E9',      // Blue primary (from dashboard)
-  secondary: '#3A9BD1',    // Darker blue
-  tertiary: '#7CC4ED',     // Lighter blue
-  accent: '#2E86C1',       // Deep blue accent
-  success: '#27AE60',      // Keep green for success
-  warning: '#F39C12',      // Keep orange for warning
-  danger: '#E74C3C',       // Keep red for danger
+  primary: '#56B6E9',
+  secondary: '#3A9BD1',
+  tertiary: '#7CC4ED',
+  accent: '#2E86C1',
+  success: '#27AE60',
+  warning: '#F39C12',
+  danger: '#E74C3C',
   gray: {
     50: '#F8FAFC',
     100: '#F1F5F9',
@@ -65,13 +65,13 @@ interface NotificationState {
 }
 
 // Restaurant CFO Logo Component
-const IAMCFOLogo = ({ className = "w-12 h-12" }: { className?: string }) => (
+const IAMCFOLogo = ({ className = "w-8 h-8 sm:w-12 sm:h-12" }: { className?: string }) => (
   <div className={`${className} flex items-center justify-center relative`}>
     <img 
       src="/favicon.png" 
       alt="IAM CFO Logo" 
       className="w-full h-full object-contain rounded"
-      style={{ minWidth: '48px', minHeight: '48px' }}
+      style={{ minWidth: '32px', minHeight: '32px' }}
     />
   </div>
 );
@@ -80,12 +80,12 @@ export default function InventoryDashboard() {
   // State management
   const [selectedTimeframe, setSelectedTimeframe] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly'>('monthly');
   const [notification, setNotification] = useState<NotificationState>({ show: false, message: '', type: 'info' });
-  const [syncDropdownOpen, setSyncDropdownOpen] = useState(false);
-  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedLocations, setSelectedLocations] = useState<Set<string>>(new Set(['all']));
   const [searchTerm, setSearchTerm] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Comprehensive Location-Based QUANTIC POS Inventory Data
   const allInventoryData: InventoryItem[] = [
@@ -166,7 +166,6 @@ export default function InventoryDashboard() {
       costPerServing: 195.00,
       averageUsagePerDay: 0.4
     },
-
     // BEACH LOCATION - Fast Casual
     {
       id: 'salmon-fillet-beach',
@@ -244,7 +243,6 @@ export default function InventoryDashboard() {
       costPerServing: 1.25,
       averageUsagePerDay: 12
     },
-
     // AIRPORT EXPRESS - Quick Service
     {
       id: 'olive-oil-extra-airport',
@@ -322,7 +320,6 @@ export default function InventoryDashboard() {
       costPerServing: 0.85,
       averageUsagePerDay: 150
     },
-
     // MIDTOWN CAFÉ - Café
     {
       id: 'mozzarella-cheese-midtown',
@@ -400,7 +397,6 @@ export default function InventoryDashboard() {
       costPerServing: 0.18,
       averageUsagePerDay: 6
     },
-
     // ALL LOCATIONS - Shared Items
     {
       id: 'organic-lettuce-all',
@@ -459,7 +455,7 @@ export default function InventoryDashboard() {
     }
   ];
 
-  // Location data (consistent with your dashboard)
+  // Location data
   const locations = [
     { id: 'all', name: 'All Locations', emoji: '🏢' },
     { id: 'downtown-main', name: 'Downtown Main', emoji: '🍽️' },
@@ -470,15 +466,25 @@ export default function InventoryDashboard() {
 
   // Utility functions
   const formatCurrency = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}k`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).format(amount);
   };
 
   const formatNumber = (value: number): string => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}k`;
+    }
     return value.toLocaleString();
   };
 
@@ -531,7 +537,7 @@ export default function InventoryDashboard() {
       const location = locations.find(l => l.id === locationId);
       return location?.name || '1 Location';
     }
-    return `${selectedLocations.size} Locations Selected`;
+    return `${selectedLocations.size} Locations`;
   };
 
   const getFilteredInventory = () => {
@@ -698,35 +704,265 @@ export default function InventoryDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Page Header with I AM CFO Branding */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center">
-            <IAMCFOLogo className="w-12 h-12 mr-4" />
-            <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold text-gray-900">I AM CFO</h1>
-                <span className="text-sm px-3 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
-                  Inventory Management
-                </span>
+      {/* Notification */}
+      {notification.show && (
+        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 sm:top-5 sm:right-5 sm:left-auto sm:transform-none z-50 px-4 sm:px-6 py-3 sm:py-4 rounded-lg text-white font-medium shadow-lg transition-all max-w-xs sm:max-w-none text-sm sm:text-base ${
+          notification.type === 'success' ? 'bg-green-500' :
+          notification.type === 'error' ? 'bg-red-500' :
+          notification.type === 'warning' ? 'bg-yellow-500' :
+          'bg-blue-500'
+        }`}>
+          {notification.message}
+        </div>
+      )}
+
+      {/* Page Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <IAMCFOLogo className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4" />
+              <div>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">I AM CFO</h1>
+                  <span className="text-xs sm:text-sm px-2 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
+                    <span className="hidden sm:inline">Inventory Management</span>
+                    <span className="sm:hidden">Inventory</span>
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">QUANTIC POS Integration • Real-time Stock Levels • Cost Analysis</p>
               </div>
-              <p className="text-sm text-gray-600 mt-1">QUANTIC POS Integration • Real-time Stock Levels • Cost Analysis</p>
+            </div>
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2 rounded-lg border border-gray-300 bg-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Desktop Action Buttons */}
+            <div className="hidden sm:flex gap-2">
+              <button
+                onClick={() => showNotification('Syncing inventory from QUANTIC POS...', 'info')}
+                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden lg:inline">Sync QUANTIC</span>
+              </button>
+              <button
+                onClick={() => showNotification('Inventory report exported successfully', 'success')}
+                className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                style={{ backgroundColor: BRAND_COLORS.primary }}
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden lg:inline">Export</span>
+              </button>
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden" onClick={() => setMobileMenuOpen(false)}>
+              <div className="fixed top-0 right-0 w-80 max-w-full h-full bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Inventory Menu</h3>
+                    <button onClick={() => setMobileMenuOpen(false)}>
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Search */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Search Items</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          placeholder="Search items..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 transition-all w-full"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Category Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                      <select
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                      >
+                        <option value="all">All Categories</option>
+                        <option value="produce">🥬 Produce</option>
+                        <option value="meat">🥩 Meat & Seafood</option>
+                        <option value="dairy">🧀 Dairy</option>
+                        <option value="dry-goods">🌾 Dry Goods</option>
+                        <option value="beverages">🍺 Beverages</option>
+                        <option value="supplies">📦 Supplies</option>
+                      </select>
+                    </div>
+
+                    {/* Status Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="in-stock">✅ In Stock</option>
+                        <option value="low-stock">⚠️ Low Stock</option>
+                        <option value="out-of-stock">❌ Out of Stock</option>
+                        <option value="overstocked">📈 Overstocked</option>
+                      </select>
+                    </div>
+
+                    {/* Location Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Locations</label>
+                      <div className="space-y-2">
+                        {locations.map((location) => (
+                          <div
+                            key={location.id}
+                            className="flex items-center p-2 hover:bg-gray-50 cursor-pointer rounded"
+                            onClick={() => handleLocationToggle(location.id)}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedLocations.has(location.id)}
+                              onChange={() => {}}
+                              className="mr-3 h-4 w-4 border-gray-300 rounded"
+                              style={{ accentColor: BRAND_COLORS.primary }}
+                            />
+                            <span className="mr-2">{location.emoji}</span>
+                            <span className={location.id === 'all' ? 'font-medium text-gray-900' : 'text-gray-700'}>
+                              {location.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2 pt-4">
+                      <button
+                        onClick={() => {
+                          showNotification('Syncing inventory from QUANTIC POS...', 'info');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Sync QUANTIC POS
+                      </button>
+                      <button
+                        onClick={() => {
+                          showNotification('Inventory report exported successfully', 'success');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg"
+                        style={{ backgroundColor: BRAND_COLORS.primary }}
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Report
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Controls */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div className="flex items-center">
-              <div>
-                <h2 className="text-2xl font-bold" style={{ color: BRAND_COLORS.primary }}>Live Inventory Intelligence</h2>
-                <p className="text-sm text-gray-600">Real-time stock levels, cost analysis, and reorder management</p>
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="space-y-6 sm:space-y-8">
+          {/* Page Title */}
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold" style={{ color: BRAND_COLORS.primary }}>
+              <span className="sm:hidden">Live Inventory</span>
+              <span className="hidden sm:inline">Live Inventory Intelligence</span>
+            </h2>
+            <p className="text-sm text-gray-600">Real-time stock levels, cost analysis, and reorder management</p>
+          </div>
+
+          {/* Mobile Filters */}
+          <div className="sm:hidden">
+            <button
+              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+              className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white text-sm"
+            >
+              <span>Filters & Search</span>
+              <Filter className="w-4 h-4" />
+            </button>
+            
+            {mobileFiltersOpen && (
+              <div className="mt-3 p-4 border border-gray-300 rounded-lg bg-white space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Search Items</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search items..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 transition-all w-full"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                    >
+                      <option value="all">All</option>
+                      <option value="produce">🥬 Produce</option>
+                      <option value="meat">🥩 Meat</option>
+                      <option value="dairy">🧀 Dairy</option>
+                      <option value="dry-goods">🌾 Dry Goods</option>
+                      <option value="beverages">🍺 Beverages</option>
+                      <option value="supplies">📦 Supplies</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                    >
+                      <option value="all">All</option>
+                      <option value="in-stock">✅ In Stock</option>
+                      <option value="low-stock">⚠️ Low</option>
+                      <option value="out-of-stock">❌ Out</option>
+                      <option value="overstocked">📈 Over</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  Showing {getFilteredInventory().length} of {allInventoryData.length} items • {getSelectedLocationsText()}
+                </div>
               </div>
-            </div>
+            )}
+          </div>
+
+          {/* Desktop Controls */}
+          <div className="hidden sm:flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="flex items-center space-x-4">
               {/* Search */}
               <div className="relative">
@@ -736,8 +972,7 @@ export default function InventoryDashboard() {
                   placeholder="Search items..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 transition-all"
-                  style={{ '--tw-ring-color': BRAND_COLORS.primary + '33' } as React.CSSProperties}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 transition-all w-64"
                 />
               </div>
 
@@ -768,178 +1003,96 @@ export default function InventoryDashboard() {
                 <option value="out-of-stock">❌ Out of Stock</option>
                 <option value="overstocked">📈 Overstocked</option>
               </select>
+            </div>
 
-              {/* Location Filter Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                  className="flex items-center justify-between w-48 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
-                >
-                  <span className="truncate">{getSelectedLocationsText()}</span>
-                  <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${locationDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {locationDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
-                    {locations.map((location) => (
-                      <div
-                        key={location.id}
-                        className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm"
-                        onClick={() => handleLocationToggle(location.id)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedLocations.has(location.id)}
-                          onChange={() => {}}
-                          className="mr-3 h-4 w-4 border-gray-300 rounded"
-                          style={{ accentColor: BRAND_COLORS.primary }}
-                        />
-                        <span className="mr-2">{location.emoji}</span>
-                        <span className={location.id === 'all' ? 'font-medium text-gray-900' : 'text-gray-700'}>
-                          {location.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Sync Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Sync QUANTIC
-                  <ChevronDown className={`w-4 h-4 transition-transform ${syncDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {syncDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-48">
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          showNotification('Syncing inventory from QUANTIC POS...', 'info');
-                          setSyncDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                      >
-                        Sync All Inventory
-                      </button>
-                      <button
-                        onClick={() => {
-                          showNotification('Syncing stock levels...', 'info');
-                          setSyncDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                      >
-                        Sync Stock Levels Only
-                      </button>
-                      <button
-                        onClick={() => {
-                          showNotification('Syncing cost data...', 'info');
-                          setSyncDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                      >
-                        Sync Cost Data
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => showNotification('Inventory report exported successfully', 'success')}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
-                style={{ backgroundColor: BRAND_COLORS.primary }}
-              >
-                <Download className="w-4 h-4" />
-                Export Report
-              </button>
+            <div className="text-sm text-gray-600">
+              Showing {getFilteredInventory().length} of {allInventoryData.length} items • {getSelectedLocationsText()}
             </div>
           </div>
 
           {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.primary }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+            <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.primary }}>
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="text-gray-600 text-sm font-medium mb-2">Total Inventory Value</div>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Total Value</div>
+                  <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">
                     {formatCurrency(metrics.totalValue)}
                   </div>
                   <div className="text-xs px-2 py-1 rounded-full inline-flex items-center bg-green-100 text-green-800">
                     <ArrowUp className="w-3 h-3 mr-1" />
-                    +5.2% vs last month
+                    <span className="hidden sm:inline">+5.2% vs last month</span>
+                    <span className="sm:hidden">+5.2%</span>
                   </div>
                 </div>
-                <DollarSign className="w-8 h-8" style={{ color: BRAND_COLORS.primary }} />
+                <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.primary }} />
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
+            <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.success }}>
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="text-gray-600 text-sm font-medium mb-2">Inventory Turnover</div>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Turnover</div>
+                  <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">
                     {metrics.averageTurnover.toFixed(1)}x
                   </div>
                   <div className="text-xs px-2 py-1 rounded-full inline-flex items-center bg-green-100 text-green-800">
                     <TrendingUp className="w-3 h-3 mr-1" />
-                    Healthy rate
+                    <span className="hidden sm:inline">Healthy rate</span>
+                    <span className="sm:hidden">Healthy</span>
                   </div>
                 </div>
-                <BarChart3 className="w-8 h-8" style={{ color: BRAND_COLORS.success }} />
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.success }} />
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.warning }}>
+            <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: BRAND_COLORS.warning }}>
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="text-gray-600 text-sm font-medium mb-2">Days on Hand</div>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Days on Hand</div>
+                  <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">
                     {metrics.totalDaysOnHand.toFixed(1)}
                   </div>
                   <div className="text-xs px-2 py-1 rounded-full inline-flex items-center bg-yellow-100 text-yellow-800">
                     <Clock className="w-3 h-3 mr-1" />
-                    Average days
+                    <span className="hidden sm:inline">Average days</span>
+                    <span className="sm:hidden">Avg</span>
                   </div>
                 </div>
-                <Clock className="w-8 h-8" style={{ color: BRAND_COLORS.warning }} />
+                <Clock className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: BRAND_COLORS.warning }} />
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: metrics.criticalItems > 0 ? BRAND_COLORS.danger : BRAND_COLORS.success }}>
+            <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: metrics.criticalItems > 0 ? BRAND_COLORS.danger : BRAND_COLORS.success }}>
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="text-gray-600 text-sm font-medium mb-2">Critical Items</div>
-                  <div className="text-3xl font-bold text-gray-900 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">Critical Items</div>
+                  <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">
                     {metrics.criticalItems}
                   </div>
                   <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${
                     metrics.criticalItems > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
                   }`}>
                     <AlertTriangle className="w-3 h-3 mr-1" />
-                    {metrics.criticalItems > 0 ? 'Needs attention' : 'All good'}
+                    <span className="hidden sm:inline">{metrics.criticalItems > 0 ? 'Needs attention' : 'All good'}</span>
+                    <span className="sm:hidden">{metrics.criticalItems > 0 ? 'Alert' : 'OK'}</span>
                   </div>
                 </div>
-                <AlertTriangle className="w-8 h-8" style={{ color: metrics.criticalItems > 0 ? BRAND_COLORS.danger : BRAND_COLORS.success }} />
+                <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 ml-2" style={{ color: metrics.criticalItems > 0 ? BRAND_COLORS.danger : BRAND_COLORS.success }} />
               </div>
             </div>
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Inventory Value by Category */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Inventory Value by Category</h3>
-                <p className="text-sm text-gray-600 mt-1">Distribution of inventory investment across categories</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Value by Category</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Distribution across categories</p>
               </div>
-              <div className="p-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={250}>
                   <RechartsPieChart>
                     <Tooltip 
                       formatter={(value: any) => [`${formatCurrency(Number(value))}`, 'Value']}
@@ -949,10 +1102,11 @@ export default function InventoryDashboard() {
                       data={categoryData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={100}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                       label={({ category, percent }) => `${category}: ${(percent * 100).toFixed(0)}%`}
+                      labelStyle={{ fontSize: 12 }}
                     >
                       {categoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -965,16 +1119,16 @@ export default function InventoryDashboard() {
 
             {/* Turnover Analysis */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Top Items by Turnover Rate</h3>
-                <p className="text-sm text-gray-600 mt-1">Items with highest inventory turnover rates</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Top Turnover Items</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Highest turnover rates</p>
               </div>
-              <div className="p-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={turnoverData} layout="horizontal">
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={100} />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
                     <Tooltip 
                       formatter={(value: any, name) => [
                         name === 'turnover' ? `${Number(value).toFixed(1)}x/month` : 
@@ -992,17 +1146,17 @@ export default function InventoryDashboard() {
 
             {/* Inventory Trend */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden lg:col-span-2">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Inventory Value Trend</h3>
-                <p className="text-sm text-gray-600 mt-1">6-month inventory value and turnover trends</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Inventory Value Trend</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">6-month inventory value and turnover trends</p>
               </div>
-              <div className="p-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={250}>
                   <ComposedChart data={trendData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis yAxisId="value" orientation="left" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                    <YAxis yAxisId="turnover" orientation="right" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="value" orientation="left" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="turnover" orientation="right" tick={{ fontSize: 12 }} />
                     <Tooltip 
                       formatter={(value: any, name) => [
                         name === 'totalValue' ? formatCurrency(Number(value)) :
@@ -1043,8 +1197,67 @@ export default function InventoryDashboard() {
             </div>
           </div>
 
-          {/* Inventory Items Table */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {/* Inventory Items - Mobile Cards */}
+          <div className="sm:hidden">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Inventory Items</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {getFilteredInventory().length} of {allInventoryData.length} items
+                </p>
+              </div>
+              <div className="p-4 space-y-4">
+                {getFilteredInventory().map((item) => (
+                  <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center min-w-0 flex-1">
+                        <span className="text-lg mr-3 flex-shrink-0">{getCategoryIcon(item.category)}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-gray-900 truncate">{item.name}</div>
+                          <div className="text-xs text-gray-500">{item.location}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 ml-2">
+                        {getStatusIcon(item.status)}
+                        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(item.status)}`}>
+                          {item.status.replace('-', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Stock:</span>
+                        <span className="ml-2 font-medium">{formatNumber(item.currentStock)} {item.unit}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Value:</span>
+                        <span className="ml-2 font-medium">{formatCurrency(item.totalValue)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Days on Hand:</span>
+                        <span className="ml-2 font-medium">{item.daysOnHand.toFixed(1)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Turnover:</span>
+                        <span className="ml-2 font-medium">{item.turnoverRate.toFixed(1)}x</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="text-xs text-gray-500">
+                        <span className="font-medium">{item.supplier}</span> • 
+                        Updated {new Date(item.lastUpdated).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Inventory Items Table - Desktop */}
+          <div className="hidden sm:block bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <div>
@@ -1138,29 +1351,6 @@ export default function InventoryDashboard() {
           </div>
         </div>
       </main>
-
-      {/* Notification */}
-      {notification.show && (
-        <div className={`fixed top-5 right-5 z-50 px-6 py-4 rounded-lg text-white font-medium shadow-lg transition-transform ${
-          notification.type === 'success' ? 'bg-green-500' :
-          notification.type === 'error' ? 'bg-red-500' :
-          notification.type === 'warning' ? 'bg-yellow-500' :
-          'bg-blue-500'
-        } ${notification.show ? 'translate-x-0' : 'translate-x-full'}`}>
-          {notification.message}
-        </div>
-      )}
-
-      {/* Click outside to close dropdowns */}
-      {(syncDropdownOpen || locationDropdownOpen) && (
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => {
-            setSyncDropdownOpen(false);
-            setLocationDropdownOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 }
