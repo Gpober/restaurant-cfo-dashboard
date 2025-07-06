@@ -1,4 +1,3 @@
-import './globals.css';
 import Link from 'next/link';
 import { Inter } from 'next/font/google';
 
@@ -16,9 +15,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* ✅ Load the manually compiled Tailwind CSS */}
+        <link rel="stylesheet" href="/styles.css" />
         <link rel="icon" type="image/png" href="/favicon.png" />
       </head>
-      <body className={inter.className + ' bg-gray-50 font-sans'}>
+      <body className={inter.className}>
         <nav className="bg-white shadow px-6 py-4 flex space-x-4">
           <Link href="/">Dashboard</Link>
           <Link href="/inventory">Inventory</Link>
