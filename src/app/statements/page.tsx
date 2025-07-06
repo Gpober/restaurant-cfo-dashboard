@@ -141,7 +141,7 @@ interface NotificationState {
   type: 'info' | 'success' | 'error' | 'warning';
 }
 
-// IAM CFO Logo Component
+// Restaurant CFO Logo Component
 const IAMCFOLogo = ({ className = "w-12 h-12" }: { className?: string }) => (
   <div className={`${className} flex items-center justify-center relative`}>
     <img 
