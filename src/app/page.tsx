@@ -69,13 +69,14 @@ interface NotificationState {
   type: 'info' | 'success' | 'error' | 'warning';
 }
 
-// I AM CFO Logo Component
+// Restaurant CFO Logo Component
 const IAMCFOLogo = ({ className = "w-12 h-12" }: { className?: string }) => (
   <div className={`${className} flex items-center justify-center relative`}>
     <img 
       src="/favicon.png" 
-      alt="I AM CFO Logo" 
+      alt="IAM CFO Logo" 
       className="w-full h-full object-contain rounded"
+      style={{ minWidth: '48px', minHeight: '48px' }}
     />
   </div>
 );
