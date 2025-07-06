@@ -19,6 +19,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/styles.css" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .scrollbar-hide {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+            
+            /* Smooth scrolling for horizontal navigation */
+            .scrollbar-hide {
+              scroll-behavior: smooth;
+            }
+            
+            /* Active link styles - you can add these with JavaScript or use Next.js useRouter */
+            .nav-link-active {
+              background-color: #3b82f6 !important;
+              color: white !important;
+            }
+            .nav-link-active:hover {
+              background-color: #2563eb !important;
+              color: white !important;
+            }
+          `
+        }} />
       </head>
       <body className={`${inter.className} bg-gray-50`}>
         {/* Mobile-First Navigation */}
@@ -80,32 +106,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="px-3 py-4 sm:px-6 sm:py-6 max-w-7xl mx-auto">
           {children}
         </main>
-
-        {/* Custom CSS for hiding scrollbar */}
-        <style jsx global>{`
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          
-          /* Smooth scrolling for horizontal navigation */
-          .scrollbar-hide {
-            scroll-behavior: smooth;
-          }
-          
-          /* Active link styles - you can add these with JavaScript or use Next.js useRouter */
-          .nav-link-active {
-            background-color: #3b82f6;
-            color: white;
-          }
-          .nav-link-active:hover {
-            background-color: #2563eb;
-            color: white;
-          }
-        `}</style>
       </body>
     </html>
   );
