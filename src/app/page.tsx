@@ -7,7 +7,7 @@ import {
   Home, Users, MapPin, Star, Settings, Bell, Search, Filter,
   Building2, Key, Wrench, CreditCard, AlertTriangle, CheckCircle,
   FileText, Calculator, Receipt, Zap, Link, Activity, UtensilsCrossed,
-  Clock, ShoppingCart, ChefHat, Truck
+  Clock, ShoppingCart, ChefHat, Truck, Menu
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
@@ -15,15 +15,15 @@ import {
   ComposedChart
 } from 'recharts';
 
-// Restaurant CFO Brand Colors (Updated to Blue Theme)
+// Restaurant CFO Brand Colors
 const BRAND_COLORS = {
-  primary: '#56B6E9',      // Blue primary (from dashboard)
-  secondary: '#3A9BD1',    // Darker blue
-  tertiary: '#7CC4ED',     // Lighter blue
-  accent: '#2E86C1',       // Deep blue accent
-  success: '#27AE60',      // Keep green for success
-  warning: '#F39C12',      // Keep orange for warning
-  danger: '#E74C3C',       // Keep red for danger
+  primary: '#56B6E9',
+  secondary: '#3A9BD1',
+  tertiary: '#7CC4ED',
+  accent: '#2E86C1',
+  success: '#27AE60',
+  warning: '#F39C12',
+  danger: '#E74C3C',
   gray: {
     50: '#F8FAFC',
     100: '#F1F5F9',
@@ -38,81 +38,40 @@ const BRAND_COLORS = {
   }
 };
 
-// Type definitions
-interface Restaurant {
-  id: string;
-  name: string;
-  location: string;
-  type: 'fast-casual' | 'fine-dining' | 'quick-service' | 'cafe';
-  status: 'open' | 'closed' | 'maintenance';
-  dailyRevenue: number;
-  weeklyRevenue: number;
-  monthlyRevenue: number;
-  quarterlyRevenue: number;
-  dailyCustomers: number;
-  weeklyCustomers: number;
-  monthlyCustomers: number;
-  avgTicket: number;
-  dailyLaborCost: number;
-  weeklyLaborCost: number;
-  monthlyLaborCost: number;
-  dailyFoodCost: number;
-  weeklyFoodCost: number;
-  monthlyFoodCost: number;
-  rating: number;
-  color: string;
-}
-
-interface NotificationState {
-  show: boolean;
-  message: string;
-  type: 'info' | 'success' | 'error' | 'warning';
-}
-
-// Restaurant CFO Logo Component
-const IAMCFOLogo = ({ className = "w-12 h-12" }: { className?: string }) => (
+// Logo Component
+const IAMCFOLogo = ({ className = "w-8 h-8 sm:w-12 sm:h-12" }) => (
   <div className={`${className} flex items-center justify-center relative`}>
     <img 
       src="/favicon.png" 
       alt="IAM CFO Logo" 
       className="w-full h-full object-contain rounded"
-      style={{ minWidth: '48px', minHeight: '48px' }}
+      style={{ minWidth: '32px', minHeight: '32px' }}
     />
   </div>
 );
 
 export default function RestaurantDashboard() {
-  // State management
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly'>('monthly');
-  const [notification, setNotification] = useState<NotificationState>({ show: false, message: '', type: 'info' });
+  const [selectedTimeframe, setSelectedTimeframe] = useState('monthly');
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [syncDropdownOpen, setSyncDropdownOpen] = useState(false);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
-  const [selectedLocations, setSelectedLocations] = useState<Set<string>>(new Set(['all']));
+  const [selectedLocations, setSelectedLocations] = useState(new Set(['all']));
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Sample restaurant data with expanded timeframes
-  const restaurants: Restaurant[] = [
+  // Sample restaurant data
+  const restaurants = [
     {
       id: 'downtown-main',
       name: 'Downtown Main',
       location: 'Miami Downtown, FL',
       type: 'fine-dining',
       status: 'open',
-      dailyRevenue: 12500,
-      weeklyRevenue: 87500,
       monthlyRevenue: 325000,
-      quarterlyRevenue: 975000,
-      dailyCustomers: 185,
-      weeklyCustomers: 1295,
       monthlyCustomers: 5550,
       avgTicket: 67.50,
-      dailyLaborCost: 4250,
-      weeklyLaborCost: 29750,
       monthlyLaborCost: 127500,
-      dailyFoodCost: 3750,
-      weeklyFoodCost: 26250,
       monthlyFoodCost: 112500,
-      rating: 4.7,
-      color: BRAND_COLORS.primary
+      rating: 4.7
     },
     {
       id: 'beach-location',
@@ -120,22 +79,12 @@ export default function RestaurantDashboard() {
       location: 'Miami Beach, FL',
       type: 'fast-casual',
       status: 'open',
-      dailyRevenue: 8900,
-      weeklyRevenue: 62300,
       monthlyRevenue: 232000,
-      quarterlyRevenue: 696000,
-      dailyCustomers: 245,
-      weeklyCustomers: 1715,
       monthlyCustomers: 7350,
       avgTicket: 36.30,
-      dailyLaborCost: 2850,
-      weeklyLaborCost: 19950,
       monthlyLaborCost: 85500,
-      dailyFoodCost: 2670,
-      weeklyFoodCost: 18690,
       monthlyFoodCost: 80100,
-      rating: 4.5,
-      color: BRAND_COLORS.secondary
+      rating: 4.5
     },
     {
       id: 'airport-express',
@@ -143,22 +92,12 @@ export default function RestaurantDashboard() {
       location: 'Miami Airport, FL',
       type: 'quick-service',
       status: 'open',
-      dailyRevenue: 15200,
-      weeklyRevenue: 106400,
       monthlyRevenue: 395000,
-      quarterlyRevenue: 1185000,
-      dailyCustomers: 580,
-      weeklyCustomers: 4060,
       monthlyCustomers: 17400,
       avgTicket: 26.20,
-      dailyLaborCost: 3040,
-      weeklyLaborCost: 21280,
       monthlyLaborCost: 91200,
-      dailyFoodCost: 4560,
-      weeklyFoodCost: 31920,
       monthlyFoodCost: 136800,
-      rating: 4.2,
-      color: BRAND_COLORS.tertiary
+      rating: 4.2
     },
     {
       id: 'cafe-midtown',
@@ -166,27 +105,22 @@ export default function RestaurantDashboard() {
       location: 'Midtown Miami, FL',
       type: 'cafe',
       status: 'maintenance',
-      dailyRevenue: 3200,
-      weeklyRevenue: 22400,
       monthlyRevenue: 83000,
-      quarterlyRevenue: 249000,
-      dailyCustomers: 95,
-      weeklyCustomers: 665,
       monthlyCustomers: 2850,
       avgTicket: 33.70,
-      dailyLaborCost: 1280,
-      weeklyLaborCost: 8960,
       monthlyLaborCost: 38400,
-      dailyFoodCost: 960,
-      weeklyFoodCost: 6720,
       monthlyFoodCost: 28800,
-      rating: 4.6,
-      color: BRAND_COLORS.warning
+      rating: 4.6
     }
   ];
 
   // Utility functions
-  const formatCurrency = (amount: number): string => {
+  const formatCurrency = (amount) => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}k`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -195,36 +129,61 @@ export default function RestaurantDashboard() {
     }).format(amount);
   };
 
-  const formatPercentage = (value: number): string => {
-    return `${value.toFixed(1)}%`;
-  };
-
-  const formatNumber = (value: number): string => {
+  const formatNumber = (value) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}k`;
+    }
     return value.toLocaleString();
   };
 
-  const formatValue = (value: number | string, format: string): string => {
-    if (typeof value === 'string') return value;
-    switch (format) {
-      case 'currency':
-        return formatCurrency(value);
-      case 'percentage':
-        return formatPercentage(value);
-      case 'number':
-        return formatNumber(value);
-      default:
-        return value.toString();
-    }
-  };
-
-  const showNotification = (message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info'): void => {
+  const showNotification = (message, type = 'info') => {
     setNotification({ show: true, message, type });
     setTimeout(() => {
       setNotification({ show: false, message: '', type: 'info' });
     }, 3000);
   };
 
-  const handleLocationToggle = (locationId: string) => {
+  const getFilteredRestaurants = () => {
+    if (selectedLocations.has('all') || selectedLocations.size === 0) {
+      return restaurants;
+    }
+    return restaurants.filter(restaurant => selectedLocations.has(restaurant.id));
+  };
+
+  const getRestaurantIcon = (type) => {
+    switch (type) {
+      case 'fine-dining': return '🍽️';
+      case 'fast-casual': return '🍔';
+      case 'quick-service': return '🚀';
+      case 'cafe': return '☕';
+      default: return '🏪';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'open': return 'bg-green-100 text-green-800';
+      case 'closed': return 'bg-gray-100 text-gray-800';
+      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getSelectedLocationsText = () => {
+    if (selectedLocations.has('all') || selectedLocations.size === 0) {
+      return 'All Locations';
+    }
+    if (selectedLocations.size === 1) {
+      const locationId = Array.from(selectedLocations)[0];
+      const restaurant = restaurants.find(r => r.id === locationId);
+      return restaurant?.name || '1 Location';
+    }
+    return `${selectedLocations.size} Locations`;
+  };
+
+  const handleLocationToggle = (locationId) => {
     const newSelected = new Set(selectedLocations);
     
     if (locationId === 'all') {
@@ -257,477 +216,184 @@ export default function RestaurantDashboard() {
     setSelectedLocations(newSelected);
   };
 
-  const getSelectedLocationsText = () => {
-    if (selectedLocations.has('all') || selectedLocations.size === 0) {
-      return 'All Locations';
-    }
-    if (selectedLocations.size === 1) {
-      const locationId = Array.from(selectedLocations)[0];
-      const restaurant = restaurants.find(r => r.id === locationId);
-      return restaurant?.name || '1 Location';
-    }
-    return `${selectedLocations.size} Locations Selected`;
-  };
+  // Calculate totals
+  const filteredRestaurants = getFilteredRestaurants();
+  const totalRevenue = filteredRestaurants.reduce((sum, r) => sum + r.monthlyRevenue, 0);
+  const totalCustomers = filteredRestaurants.reduce((sum, r) => sum + r.monthlyCustomers, 0);
+  const totalLaborCost = filteredRestaurants.reduce((sum, r) => sum + r.monthlyLaborCost, 0);
+  const totalFoodCost = filteredRestaurants.reduce((sum, r) => sum + r.monthlyFoodCost, 0);
+  const avgOrderValue = filteredRestaurants.length > 0 ? 
+    filteredRestaurants.reduce((sum, r) => sum + r.avgTicket, 0) / filteredRestaurants.length : 0;
 
-  const getFilteredRestaurants = () => {
-    if (selectedLocations.has('all') || selectedLocations.size === 0) {
-      return restaurants;
-    }
-    return restaurants.filter(restaurant => selectedLocations.has(restaurant.id));
-  };
+  const totalExpenses = totalLaborCost + totalFoodCost + (totalRevenue * 0.095);
+  const netIncome = totalRevenue - totalExpenses;
+  const foodCostPercentage = (totalFoodCost / totalRevenue) * 100;
+  const laborCostPercentage = (totalLaborCost / totalRevenue) * 100;
 
-  const getRestaurantIcon = (type: string) => {
-    switch (type) {
-      case 'fine-dining':
-        return '🍽️';
-      case 'fast-casual':
-        return '🍔';
-      case 'quick-service':
-        return '🚀';
-      case 'cafe':
-        return '☕';
-      default:
-        return '🏪';
-    }
-  };
-
-  const getRevenueForTimeframe = (restaurant: Restaurant): number => {
-    switch (selectedTimeframe) {
-      case 'daily':
-        return restaurant.dailyRevenue;
-      case 'weekly':
-        return restaurant.weeklyRevenue;
-      case 'monthly':
-        return restaurant.monthlyRevenue;
-      case 'quarterly':
-        return restaurant.quarterlyRevenue;
-      default:
-        return restaurant.monthlyRevenue;
-    }
-  };
-
-  const getCustomerCountForTimeframe = (restaurant: Restaurant): number => {
-    switch (selectedTimeframe) {
-      case 'daily':
-        return restaurant.dailyCustomers;
-      case 'weekly':
-        return restaurant.weeklyCustomers;
-      case 'monthly':
-        return restaurant.monthlyCustomers;
-      case 'quarterly':
-        return Math.floor(restaurant.monthlyCustomers * 3);
-      default:
-        return restaurant.dailyCustomers;
-    }
-  };
-
-  const getLaborCostForTimeframe = (restaurant: Restaurant): number => {
-    switch (selectedTimeframe) {
-      case 'daily':
-        return restaurant.dailyLaborCost;
-      case 'weekly':
-        return restaurant.weeklyLaborCost;
-      case 'monthly':
-        return restaurant.monthlyLaborCost;
-      case 'quarterly':
-        return Math.floor(restaurant.monthlyLaborCost * 3);
-      default:
-        return restaurant.dailyLaborCost;
-    }
-  };
-
-  const getFoodCostForTimeframe = (restaurant: Restaurant): number => {
-    switch (selectedTimeframe) {
-      case 'daily':
-        return restaurant.dailyFoodCost;
-      case 'weekly':
-        return restaurant.weeklyFoodCost;
-      case 'monthly':
-        return restaurant.monthlyFoodCost;
-      case 'quarterly':
-        return Math.floor(restaurant.monthlyFoodCost * 3);
-      default:
-        return restaurant.dailyFoodCost;
-    }
-  };
-
-  const getTimeframeLabel = (): string => {
-    switch (selectedTimeframe) {
-      case 'daily': return 'Daily';
-      case 'weekly': return 'Weekly';
-      case 'monthly': return 'Monthly';
-      case 'quarterly': return 'Quarterly';
-      default: return '';
-    }
-  };
-
-  const getTimeframeMultiplier = (): number => {
-    switch (selectedTimeframe) {
-      case 'daily': return 1;
-      case 'weekly': return 7;
-      case 'monthly': return 30;
-      case 'quarterly': return 90;
-      default: return 1;
-    }
-  };
-
-  const getFilteredData = () => {
-    const filteredRests = getFilteredRestaurants();
-    const timeframeMultiplier = getTimeframeMultiplier();
-    
-    const totalRevenue = filteredRests.reduce((sum, r) => sum + getRevenueForTimeframe(r), 0);
-    const avgOrderValue = filteredRests.length > 0 ? 
-      filteredRests.reduce((sum, r) => sum + r.avgTicket, 0) / filteredRests.length : 0;
-    
-    const filteredSalesSummary = {
-      totalRevenue: totalRevenue,
-      totalOrders: Math.floor(totalRevenue / avgOrderValue),
-      avgOrderValue: avgOrderValue,
-      customerCount: filteredRests.reduce((sum, r) => sum + getCustomerCountForTimeframe(r), 0),
-      repeatCustomers: Math.floor(filteredRests.reduce((sum, r) => sum + getCustomerCountForTimeframe(r), 0) * 0.55),
-      peakHours: '12:00-2:00 PM, 6:00-8:00 PM'
-    };
-
-    const totalLaborCost = filteredRests.reduce((sum, r) => sum + getLaborCostForTimeframe(r), 0);
-    const totalFoodCost = filteredRests.reduce((sum, r) => sum + getFoodCostForTimeframe(r), 0);
-    const otherExpenses = totalRevenue * 0.095;
-
-    const filteredFinancialSummary = {
-      totalRevenue: totalRevenue,
-      totalExpenses: totalLaborCost + totalFoodCost + otherExpenses,
-      netIncome: totalRevenue - (totalLaborCost + totalFoodCost + otherExpenses),
-      grossMargin: 68.5,
-      operatingMargin: 30.0,
-      cashFlow: Math.floor(totalRevenue * 0.275),
-      foodCostPercentage: (totalFoodCost / totalRevenue) * 100,
-      laborCostPercentage: (totalLaborCost / totalRevenue) * 100
-    };
-
-    // Calculate payroll based on filtered restaurants
-    const estimatedEmployeesPerLocation = 12; // Average employees per location
-    const totalEmployees = filteredRests.length * estimatedEmployeesPerLocation;
-    const avgHoursPerEmployee = 140 * (timeframeMultiplier / 30); // Scale hours based on timeframe
-    const totalHours = totalEmployees * avgHoursPerEmployee;
-    const avgHourlyWage = totalHours > 0 ? totalLaborCost / totalHours : 19.87;
-
-    const filteredPayrollSummary = {
-      totalPayroll: totalLaborCost,
-      activeEmployees: totalEmployees,
-      hoursWorked: totalHours,
-      avgHourlyWage: avgHourlyWage,
-      payrollTaxes: Math.floor(totalLaborCost * 0.15), // 15% for payroll taxes
-      benefits: Math.floor(totalLaborCost * 0.17) // 17% for benefits
-    };
-
-    return {
-      restaurants: filteredRests,
-      salesSummary: filteredSalesSummary,
-      financialSummary: filteredFinancialSummary,
-      payrollSummary: filteredPayrollSummary
-    };
-  };
-
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'open':
-        return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
-      case 'maintenance':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Generate chart data based on timeframe
-  const generateRevenueData = () => {
-    const filteredRests = getFilteredRestaurants();
-    const baseRevenue = filteredRests.reduce((sum, r) => sum + getRevenueForTimeframe(r), 0);
-    
-    let periods;
-    
-    switch (selectedTimeframe) {
-      case 'daily':
-        periods = ['6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'];
-        break;
-      case 'weekly':
-        periods = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        break;
-      case 'monthly':
-        periods = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-        break;
-      case 'quarterly':
-        periods = ['Month 1', 'Month 2', 'Month 3'];
-        break;
-      default:
-        periods = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    }
-    
-    return periods.map((period, index) => ({
-      period,
-      revenue: Math.floor(baseRevenue * (0.7 + index * 0.05) + Math.random() * (baseRevenue * 0.1)),
-      orders: Math.floor((baseRevenue / (filteredRests.length > 0 ? 
-        filteredRests.reduce((sum, r) => sum + r.avgTicket, 0) / filteredRests.length : 56)) * 
-        (0.6 + index * 0.08) + Math.random() * (baseRevenue * 0.01)),
-      expenses: Math.floor(baseRevenue * 0.7 * (0.7 + index * 0.05) + Math.random() * (baseRevenue * 0.05)),
-      customers: Math.floor((baseRevenue / (filteredRests.length > 0 ? 
-        filteredRests.reduce((sum, r) => sum + r.avgTicket, 0) / filteredRests.length : 68)) * 
-        (0.8 + index * 0.04) + Math.random() * (baseRevenue * 0.01))
-    }));
-  };
-
-  const generateLocationBreakdown = () => {
-    const filteredRests = getFilteredRestaurants();
-    return filteredRests.map(restaurant => ({
-      name: restaurant.name.split(' ')[0],
-      revenue: getRevenueForTimeframe(restaurant),
-      customers: getCustomerCountForTimeframe(restaurant),
-      avgTicket: restaurant.avgTicket,
-      laborCost: getLaborCostForTimeframe(restaurant)
-    }));
-  };
-
-  const generateFinancialBreakdown = () => {
-    const { financialSummary } = getFilteredData();
-    return [
-      { name: 'Revenue', value: financialSummary.totalRevenue, color: BRAND_COLORS.success },
-      { name: 'Food Costs', value: Math.floor(financialSummary.totalRevenue * (financialSummary.foodCostPercentage / 100)), color: BRAND_COLORS.warning },
-      { name: 'Labor Costs', value: Math.floor(financialSummary.totalRevenue * (financialSummary.laborCostPercentage / 100)), color: BRAND_COLORS.primary },
-      { name: 'Other Expenses', value: Math.floor(financialSummary.totalRevenue * 0.095), color: BRAND_COLORS.danger }
-    ];
-  };
-
-  const generateRecentActivity = () => {
-    const filteredRests = getFilteredRestaurants();
-    const locationsText = filteredRests.length === 1 ? filteredRests[0].name : 
-                         filteredRests.length === restaurants.length ? 'All locations' : 
-                         `${filteredRests.length} locations`;
-    
-    return [
-      { 
-        type: 'order', 
-        message: `Peak ${selectedTimeframe === 'daily' ? 'lunch' : selectedTimeframe} rush - ${locationsText} ${formatCurrency(
-          filteredRests.reduce((sum, r) => sum + getRevenueForTimeframe(r) * 0.2, 0)
-        )} in last period`, 
-        time: '1h ago', 
-        icon: '🍽️',
-        color: 'text-green-600' 
-      },
-      { 
-        type: 'sync', 
-        message: 'POS data synced successfully', 
-        time: '2h ago', 
-        icon: '🔄',
-        color: 'text-blue-600' 
-      },
-      {
-        type: 'payment',
-        message: `${getTimeframeLabel()} deposit processed - ${formatCurrency(
-          filteredRests.reduce((sum, r) => sum + getRevenueForTimeframe(r) * 0.9, 0)
-        )}`,
-        time: '4h ago',
-        icon: '💰',
-        color: 'text-green-600'
-      },
-      { 
-        type: 'inventory', 
-        message: 'Low stock alert - Salmon fillet', 
-        time: '6h ago', 
-        icon: '📦',
-        color: 'text-orange-600' 
-      },
-      { 
-        type: 'staff', 
-        message: 'Shift change - Evening crew clocked in', 
-        time: '8h ago', 
-        icon: '👥',
-        color: 'text-purple-600' 
-      }
-    ];
-  };
-
-  const revenueData = generateRevenueData();
-  const locationBreakdown = generateLocationBreakdown();
-  const financialBreakdown = generateFinancialBreakdown();
-  const recentActivity = generateRecentActivity();
-  
-  const { restaurants: filteredRestaurants, salesSummary: filteredSalesSummary, financialSummary: filteredFinancialSummary, payrollSummary: filteredPayrollSummary } = getFilteredData();
-  
-  const filteredMainKPIs = [
+  // Main KPIs
+  const mainKPIs = [
     { 
       name: 'Total Revenue', 
-      value: filteredFinancialSummary.totalRevenue, 
-      change: selectedTimeframe === 'quarterly' ? 8.4 : selectedTimeframe === 'monthly' ? 12.4 : selectedTimeframe === 'weekly' ? 5.2 : 2.1, 
+      value: totalRevenue, 
+      change: 12.4, 
       trend: 'up', 
       format: 'currency' 
     },
     { 
       name: 'Net Profit', 
-      value: filteredFinancialSummary.netIncome, 
-      change: selectedTimeframe === 'quarterly' ? 10.7 : selectedTimeframe === 'monthly' ? 18.7 : selectedTimeframe === 'weekly' ? 7.3 : 3.5, 
+      value: netIncome, 
+      change: 18.7, 
       trend: 'up', 
       format: 'currency' 
     },
     { 
       name: 'Food Cost %', 
-      value: filteredFinancialSummary.foodCostPercentage, 
-      change: selectedTimeframe === 'quarterly' ? -1.1 : selectedTimeframe === 'monthly' ? -2.1 : selectedTimeframe === 'weekly' ? -0.8 : -0.3, 
+      value: foodCostPercentage, 
+      change: -2.1, 
       trend: 'down', 
       format: 'percentage' 
     },
     { 
       name: 'Labor Cost %', 
-      value: filteredFinancialSummary.laborCostPercentage, 
-      change: selectedTimeframe === 'quarterly' ? 0.8 : selectedTimeframe === 'monthly' ? 1.8 : selectedTimeframe === 'weekly' ? 0.7 : 0.3, 
+      value: laborCostPercentage, 
+      change: 1.8, 
       trend: 'up', 
       format: 'percentage' 
     },
     { 
       name: 'Avg Order Value', 
-      value: filteredSalesSummary.avgOrderValue, 
-      change: selectedTimeframe === 'quarterly' ? 4.3 : selectedTimeframe === 'monthly' ? 8.3 : selectedTimeframe === 'weekly' ? 3.2 : 1.5, 
+      value: avgOrderValue, 
+      change: 8.3, 
       trend: 'up', 
       format: 'currency' 
     },
     { 
       name: 'Customer Count', 
-      value: filteredSalesSummary.customerCount, 
-      change: selectedTimeframe === 'quarterly' ? 7.2 : selectedTimeframe === 'monthly' ? 15.2 : selectedTimeframe === 'weekly' ? 6.1 : 2.8, 
+      value: totalCustomers, 
+      change: 15.2, 
       trend: 'up', 
       format: 'number' 
     }
   ];
 
-  const formatLastSync = (syncTime: string): string => {
-    const now = new Date();
-    const sync = new Date(syncTime);
-    const diffInMinutes = Math.floor((now.getTime() - sync.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
-    } else if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)}h ago`;
-    } else {
-      return `${Math.floor(diffInMinutes / 1440)}d ago`;
+  const formatValue = (value, format) => {
+    if (typeof value === 'string') return value;
+    switch (format) {
+      case 'currency':
+        return formatCurrency(value);
+      case 'percentage':
+        return `${value.toFixed(1)}%`;
+      case 'number':
+        return formatNumber(value);
+      default:
+        return value.toString();
     }
   };
 
-  const integrationStatus = {
-    pos: true,
-    accounting: true,
-    payroll: true,
-    inventory: false,
-    lastSync: '2025-07-05T14:30:00Z'
-  };
+  // Chart data
+  const revenueData = [
+    { period: 'Week 1', revenue: Math.floor(totalRevenue * 0.2), orders: Math.floor(totalCustomers * 0.22), customers: Math.floor(totalCustomers * 0.18) },
+    { period: 'Week 2', revenue: Math.floor(totalRevenue * 0.25), orders: Math.floor(totalCustomers * 0.26), customers: Math.floor(totalCustomers * 0.23) },
+    { period: 'Week 3', revenue: Math.floor(totalRevenue * 0.28), orders: Math.floor(totalCustomers * 0.29), customers: Math.floor(totalCustomers * 0.27) },
+    { period: 'Week 4', revenue: Math.floor(totalRevenue * 0.27), orders: Math.floor(totalCustomers * 0.23), customers: Math.floor(totalCustomers * 0.32) }
+  ];
+
+  const locationBreakdown = filteredRestaurants.map(restaurant => ({
+    name: restaurant.name.split(' ')[0],
+    revenue: restaurant.monthlyRevenue,
+    customers: restaurant.monthlyCustomers
+  }));
+
+  const financialBreakdown = [
+    { name: 'Revenue', value: totalRevenue, color: BRAND_COLORS.success },
+    { name: 'Food Costs', value: totalFoodCost, color: BRAND_COLORS.warning },
+    { name: 'Labor Costs', value: totalLaborCost, color: BRAND_COLORS.primary },
+    { name: 'Other Expenses', value: Math.floor(totalRevenue * 0.095), color: BRAND_COLORS.danger }
+  ];
+
+  const recentActivity = [
+    { 
+      type: 'order', 
+      message: `Peak lunch rush - All locations ${formatCurrency(totalRevenue * 0.2)} in last period`, 
+      time: '1h ago', 
+      icon: '🍽️',
+      color: 'text-green-600' 
+    },
+    { 
+      type: 'sync', 
+      message: 'POS data synced successfully', 
+      time: '2h ago', 
+      icon: '🔄',
+      color: 'text-blue-600' 
+    },
+    {
+      type: 'payment',
+      message: `Monthly deposit processed - ${formatCurrency(totalRevenue * 0.9)}`,
+      time: '4h ago',
+      icon: '💰',
+      color: 'text-green-600'
+    },
+    { 
+      type: 'inventory', 
+      message: 'Low stock alert - Salmon fillet', 
+      time: '6h ago', 
+      icon: '📦',
+      color: 'text-orange-600' 
+    },
+    { 
+      type: 'staff', 
+      message: 'Shift change - Evening crew clocked in', 
+      time: '8h ago', 
+      icon: '👥',
+      color: 'text-purple-600' 
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Page Header with I AM CFO Branding */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center">
-            <IAMCFOLogo className="w-12 h-12 mr-4" />
-            <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold text-gray-900">I AM CFO</h1>
-                <span className="text-sm px-3 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
-                  Restaurant Analytics
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">POS + Accounting + Payroll Integration • Beyond The P&L</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Controls */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="flex items-center mr-4">
-                <div>
-                  <h2 className="text-2xl font-bold" style={{ color: BRAND_COLORS.primary }}>Real-Time Restaurant Intelligence</h2>
-                  <p className="text-sm text-gray-600">Multi-location operations from kitchen to cash flow</p>
+              <IAMCFOLogo className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4" />
+              <div>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">I AM CFO</h1>
+                  <span className="text-xs sm:text-sm px-2 py-1 rounded-full text-white" style={{ backgroundColor: BRAND_COLORS.primary }}>
+                    Restaurant
+                  </span>
                 </div>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">POS + Accounting + Payroll Integration</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              {/* Integration Status */}
-              <div className="flex items-center space-x-2">
-                <div className="flex space-x-1">
-                  <div className={`w-2 h-2 rounded-full ${integrationStatus.pos ? 'bg-green-500' : 'bg-red-500'}`} title="POS System"></div>
-                  <div className={`w-2 h-2 rounded-full ${integrationStatus.accounting ? 'bg-green-500' : 'bg-red-500'}`} title="Accounting"></div>
-                  <div className={`w-2 h-2 rounded-full ${integrationStatus.payroll ? 'bg-green-500' : 'bg-red-500'}`} title="Payroll"></div>
-                  <div className={`w-2 h-2 rounded-full ${integrationStatus.inventory ? 'bg-green-500' : 'bg-red-500'}`} title="Inventory"></div>
-                </div>
-                <span className="text-xs text-gray-500">Last sync: {formatLastSync(integrationStatus.lastSync)}</span>
-              </div>
-              
-              {/* Sync Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setSyncDropdownOpen(!syncDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Sync
-                  <ChevronDown className={`w-4 h-4 transition-transform ${syncDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {syncDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-48">
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          showNotification('Syncing all systems...', 'info');
-                          setSyncDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                      >
-                        Sync All Systems
-                      </button>
-                      <button
-                        onClick={() => {
-                          showNotification('Syncing POS data...', 'info');
-                          setSyncDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                      >
-                        Sync POS Only
-                      </button>
-                      <button
-                        onClick={() => {
-                          showNotification('Syncing financial data...', 'info');
-                          setSyncDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                      >
-                        Sync Financial Data
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2 rounded-lg border border-gray-300 bg-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
+            {/* Desktop Controls */}
+            <div className="hidden sm:flex items-center space-x-2 lg:space-x-4">
               <select
                 value={selectedTimeframe}
-                onChange={(e) => setSelectedTimeframe(e.target.value as 'daily' | 'weekly' | 'monthly' | 'quarterly')}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
+                onChange={(e) => setSelectedTimeframe(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
               >
-                <option value="daily">Daily View</option>
-                <option value="weekly">Weekly View</option>
-                <option value="monthly">Monthly View</option>
-                <option value="quarterly">Quarterly View</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
               </select>
 
-              {/* Location Filter Dropdown */}
+              {/* Location Filter */}
               <div className="relative">
                 <button
                   onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                  className="flex items-center justify-between w-48 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
+                  className="flex items-center justify-between w-32 lg:w-48 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 transition-all"
                 >
                   <span className="truncate">{getSelectedLocationsText()}</span>
                   <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${locationDropdownOpen ? 'rotate-180' : ''}`} />
@@ -779,30 +445,148 @@ export default function RestaurantDashboard() {
               </div>
 
               <button
-                onClick={() => showNotification('Restaurant operations report exported successfully', 'success')}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
+                onClick={() => showNotification('Report exported successfully', 'success')}
+                className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-colors shadow-sm"
                 style={{ backgroundColor: BRAND_COLORS.primary }}
               >
                 <Download className="w-4 h-4" />
-                Export Report
+                <span className="hidden lg:inline">Export</span>
               </button>
             </div>
           </div>
 
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden" onClick={() => setMobileMenuOpen(false)}>
+              <div className="fixed top-0 right-0 w-80 max-w-full h-full bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Controls</h3>
+                    <button onClick={() => setMobileMenuOpen(false)}>
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Timeframe Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
+                      <select
+                        value={selectedTimeframe}
+                        onChange={(e) => setSelectedTimeframe(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                      >
+                        <option value="daily">Daily View</option>
+                        <option value="weekly">Weekly View</option>
+                        <option value="monthly">Monthly View</option>
+                        <option value="quarterly">Quarterly View</option>
+                      </select>
+                    </div>
+
+                    {/* Location Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Locations</label>
+                      <div className="space-y-2">
+                        <div
+                          className="flex items-center p-2 hover:bg-gray-50 cursor-pointer rounded"
+                          onClick={() => handleLocationToggle('all')}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedLocations.has('all')}
+                            onChange={() => {}}
+                            className="mr-3 h-4 w-4 border-gray-300 rounded"
+                            style={{ accentColor: BRAND_COLORS.primary }}
+                          />
+                          <span className="font-medium text-gray-900">All Locations</span>
+                        </div>
+                        
+                        {restaurants.map((restaurant) => (
+                          <div
+                            key={restaurant.id}
+                            className="flex items-center p-2 hover:bg-gray-50 cursor-pointer rounded"
+                            onClick={() => handleLocationToggle(restaurant.id)}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedLocations.has(restaurant.id)}
+                              onChange={() => {}}
+                              className="mr-3 h-4 w-4 border-gray-300 rounded"
+                              style={{ accentColor: BRAND_COLORS.primary }}
+                            />
+                            <div className="flex items-center flex-1">
+                              <span className="mr-2">{getRestaurantIcon(restaurant.type)}</span>
+                              <div>
+                                <div className="text-gray-900 text-sm">{restaurant.name}</div>
+                                <div className="text-xs text-gray-500">{restaurant.location}</div>
+                              </div>
+                            </div>
+                            <span className={`ml-2 inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(restaurant.status)}`}>
+                              {restaurant.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2 pt-4">
+                      <button
+                        onClick={() => {
+                          showNotification('Syncing all systems...', 'info');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Sync All Data
+                      </button>
+                      <button
+                        onClick={() => {
+                          showNotification('Report exported successfully', 'success');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg"
+                        style={{ backgroundColor: BRAND_COLORS.primary }}
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Report
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="space-y-6 sm:space-y-8">
+          {/* Page Title */}
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold" style={{ color: BRAND_COLORS.primary }}>
+              <span className="sm:hidden">Real-Time Intelligence</span>
+              <span className="hidden sm:inline">Real-Time Restaurant Intelligence</span>
+            </h2>
+            <p className="text-sm text-gray-600">Multi-location operations from kitchen to cash flow</p>
+          </div>
+
           {/* Main KPI Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMainKPIs.map((kpi, index) => {
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6">
+            {mainKPIs.map((kpi, index) => {
               const icons = [DollarSign, TrendingUp, UtensilsCrossed, Users, ShoppingCart, Clock];
               const borderColors = [BRAND_COLORS.primary, BRAND_COLORS.success, BRAND_COLORS.warning, BRAND_COLORS.accent, BRAND_COLORS.secondary, BRAND_COLORS.tertiary];
               const Icon = icons[index % icons.length];
               const borderColor = borderColors[index % borderColors.length];
               
               return (
-                <div key={kpi.name} className={`bg-white p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow`} style={{ borderLeftColor: borderColor }}>
+                <div key={kpi.name} className={`bg-white p-3 sm:p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-shadow`} style={{ borderLeftColor: borderColor }}>
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="text-gray-600 text-sm font-medium mb-2">{kpi.name}</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2 truncate">{kpi.name}</div>
+                      <div className="text-lg sm:text-3xl font-bold text-gray-900 mb-1">
                         {formatValue(kpi.value, kpi.format)}
                       </div>
                       <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center ${
@@ -813,10 +597,11 @@ export default function RestaurantDashboard() {
                         {kpi.trend === 'up' ? <ArrowUp className="w-3 h-3 mr-1" /> : 
                          kpi.trend === 'down' ? <ArrowDown className="w-3 h-3 mr-1" /> : 
                          <span className="w-3 h-3 mr-1">−</span>}
-                        {Math.abs(kpi.change)}% vs last {selectedTimeframe}
+                        <span className="hidden sm:inline">{Math.abs(kpi.change)}% vs last month</span>
+                        <span className="sm:hidden">{Math.abs(kpi.change)}%</span>
                       </div>
                     </div>
-                    <Icon className={`w-8 h-8`} style={{ color: borderColor }} />
+                    <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ml-2`} style={{ color: borderColor }} />
                   </div>
                 </div>
               );
@@ -824,20 +609,20 @@ export default function RestaurantDashboard() {
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Revenue & Orders Trend */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Revenue Chart */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">{getTimeframeLabel()} Revenue & Order Performance</h3>
-                <p className="text-sm text-gray-600 mt-1">Multi-location sales trends and customer volume analysis</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Monthly Revenue & Orders</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Sales trends and customer volume</p>
               </div>
-              <div className="p-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={250}>
                   <ComposedChart data={revenueData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
-                    <YAxis yAxisId="revenue" orientation="left" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                    <YAxis yAxisId="orders" orientation="right" />
+                    <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="revenue" orientation="left" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="orders" orientation="right" tick={{ fontSize: 12 }} />
                     <Tooltip 
                       formatter={(value, name) => [
                         name === 'revenue' ? formatCurrency(Number(value)) : 
@@ -879,25 +664,21 @@ export default function RestaurantDashboard() {
 
             {/* Location Performance */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Location Performance Metrics</h3>
-                <p className="text-sm text-gray-600 mt-1">Individual restaurant ROI and operational comparison</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Location Performance</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Individual restaurant comparison</p>
               </div>
-              <div className="p-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={locationBreakdown}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                     <Tooltip 
                       formatter={(value, name) => [
                         name === 'revenue' ? formatCurrency(Number(value)) :
-                        name === 'avgTicket' ? formatCurrency(Number(value)) :
-                        name === 'laborCost' ? formatCurrency(Number(value)) :
                         `${Number(value)} customers`,
-                        name === 'revenue' ? 'Revenue' :
-                        name === 'avgTicket' ? 'Avg Ticket' :
-                        name === 'laborCost' ? 'Labor Cost' : 'Customers'
+                        name === 'revenue' ? 'Revenue' : 'Customers'
                       ]}
                     />
                     <Legend />
@@ -910,22 +691,23 @@ export default function RestaurantDashboard() {
 
             {/* Financial Breakdown */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">{getTimeframeLabel()} Cost Structure Overview</h3>
-                <p className="text-sm text-gray-600 mt-1">Real-time P&L from integrated systems</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Cost Structure</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">P&L breakdown</p>
               </div>
-              <div className="p-6">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={250}>
                   <RechartsPieChart>
                     <Tooltip formatter={(value) => [formatCurrency(Number(value)), '']} />
                     <Pie
                       data={financialBreakdown}
                       cx="50%"
                       cy="50%"
-                      outerRadius={100}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      labelStyle={{ fontSize: 12 }}
                     >
                       {financialBreakdown.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -938,17 +720,17 @@ export default function RestaurantDashboard() {
 
             {/* Recent Activity */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Operations Activity Feed</h3>
-                <p className="text-sm text-gray-600 mt-1">Real-time updates from all restaurant systems</p>
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Activity Feed</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Real-time updates</p>
               </div>
-              <div className="p-6">
-                <div className="space-y-4">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
                   {recentActivity.map((activity, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <div className="text-lg">{activity.icon}</div>
-                      <div className="flex-1">
-                        <p className={`text-sm font-medium ${activity.color}`}>{activity.message}</p>
+                      <div className="text-base sm:text-lg">{activity.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs sm:text-sm font-medium ${activity.color} truncate`}>{activity.message}</p>
                         <p className="text-xs text-gray-500">{activity.time}</p>
                       </div>
                     </div>
@@ -958,139 +740,37 @@ export default function RestaurantDashboard() {
             </div>
           </div>
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Sales Summary */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ShoppingCart className="w-5 h-5 mr-2" style={{ color: BRAND_COLORS.primary }} />
-                  {getTimeframeLabel()} Sales Intelligence
-                </h3>
-                <p className="text-xs text-gray-600 mt-1">Multi-location sales analytics</p>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Revenue:</span>
-                  <span className="font-semibold">{formatCurrency(filteredSalesSummary.totalRevenue)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Orders:</span>
-                  <span className="font-semibold">{formatNumber(filteredSalesSummary.totalOrders)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Avg Order Value:</span>
-                  <span className="font-semibold">{formatCurrency(filteredSalesSummary.avgOrderValue)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Customer Count:</span>
-                  <span className="font-semibold">{formatNumber(filteredSalesSummary.customerCount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Repeat Customers:</span>
-                  <span className="font-semibold">{formatNumber(filteredSalesSummary.repeatCustomers)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Financial Summary */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2" style={{ color: BRAND_COLORS.success }} />
-                  {getTimeframeLabel()} Financial Performance
-                </h3>
-                <p className="text-xs text-gray-600 mt-1">Real-time accounting integration</p>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Revenue:</span>
-                  <span className="font-semibold text-green-600">{formatCurrency(filteredFinancialSummary.totalRevenue)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Expenses:</span>
-                  <span className="font-semibold text-red-600">{formatCurrency(filteredFinancialSummary.totalExpenses)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Net Income:</span>
-                  <span className="font-semibold">{formatCurrency(filteredFinancialSummary.netIncome)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Food Cost %:</span>
-                  <span className="font-semibold">{formatPercentage(filteredFinancialSummary.foodCostPercentage)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Labor Cost %:</span>
-                  <span className="font-semibold">{formatPercentage(filteredFinancialSummary.laborCostPercentage)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payroll Summary */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Users className="w-5 h-5 mr-2" style={{ color: BRAND_COLORS.warning }} />
-                  {getTimeframeLabel()} Staff Management
-                </h3>
-                <p className="text-xs text-gray-600 mt-1">Team and labor analytics</p>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Payroll:</span>
-                  <span className="font-semibold">{formatCurrency(filteredPayrollSummary.totalPayroll)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Employees:</span>
-                  <span className="font-semibold">{filteredPayrollSummary.activeEmployees}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Hours Worked:</span>
-                  <span className="font-semibold">{formatNumber(filteredPayrollSummary.hoursWorked)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Avg Hourly Wage:</span>
-                  <span className="font-semibold">{formatCurrency(filteredPayrollSummary.avgHourlyWage)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Payroll Taxes:</span>
-                  <span className="font-semibold">{formatCurrency(filteredPayrollSummary.payrollTaxes)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Restaurant Portfolio Overview */}
+          {/* Restaurant Portfolio */}
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">Restaurant Portfolio Performance</h3>
-              <p className="text-sm text-gray-600 mt-1">Multi-location operations and performance analytics</p>
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Restaurant Portfolio</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">Multi-location performance analytics</p>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {filteredRestaurants.map((restaurant) => (
-                  <div key={restaurant.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                  <div key={restaurant.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition-colors">
                     <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{restaurant.name}</h4>
-                        <p className="text-sm text-gray-600 capitalize">{restaurant.type.replace('-', ' ')}</p>
-                        <p className="text-xs text-gray-500">{restaurant.location}</p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{restaurant.name}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 capitalize">{restaurant.type.replace('-', ' ')}</p>
+                        <p className="text-xs text-gray-500 truncate">{restaurant.location}</p>
                       </div>
-                      <div className="flex flex-col items-end">
+                      <div className="flex flex-col items-end ml-2">
                         <span className="text-lg">{getRestaurantIcon(restaurant.type)}</span>
                         <span className={`text-xs px-2 py-1 rounded-full mt-1 ${getStatusColor(restaurant.status)}`}>
                           {restaurant.status}
                         </span>
                       </div>
                     </div>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-xs sm:text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">{getTimeframeLabel()} Revenue:</span>
-                        <span className="font-medium">{formatCurrency(getRevenueForTimeframe(restaurant))}</span>
+                        <span className="text-gray-600">Monthly Revenue:</span>
+                        <span className="font-medium">{formatCurrency(restaurant.monthlyRevenue)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">{getTimeframeLabel()} Customers:</span>
-                        <span className="font-medium">{formatNumber(getCustomerCountForTimeframe(restaurant))}</span>
+                        <span className="text-gray-600">Customers:</span>
+                        <span className="font-medium">{formatNumber(restaurant.monthlyCustomers)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Avg Ticket:</span>
@@ -1114,24 +794,21 @@ export default function RestaurantDashboard() {
 
       {/* Notification */}
       {notification.show && (
-        <div className={`fixed top-5 right-5 z-50 px-6 py-4 rounded-lg text-white font-medium shadow-lg transition-transform ${
+        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 sm:top-5 sm:right-5 sm:left-auto sm:transform-none z-50 px-4 sm:px-6 py-3 sm:py-4 rounded-lg text-white font-medium shadow-lg transition-all max-w-xs sm:max-w-none text-sm sm:text-base ${
           notification.type === 'success' ? 'bg-green-500' :
           notification.type === 'error' ? 'bg-red-500' :
           notification.type === 'warning' ? 'bg-yellow-500' :
           'bg-blue-500'
-        } ${notification.show ? 'translate-x-0' : 'translate-x-full'}`}>
+        } ${notification.show ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
           {notification.message}
         </div>
       )}
 
-      {/* Click outside to close dropdowns */}
-      {(syncDropdownOpen || locationDropdownOpen) && (
+      {/* Dropdown backdrop */}
+      {locationDropdownOpen && (
         <div
-          className="fixed inset-0 z-10"
-          onClick={() => {
-            setSyncDropdownOpen(false);
-            setLocationDropdownOpen(false);
-          }}
+          className="fixed inset-0 z-30"
+          onClick={() => setLocationDropdownOpen(false)}
         />
       )}
     </div>
